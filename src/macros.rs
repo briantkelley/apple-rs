@@ -38,7 +38,7 @@ macro_rules! extern_class {
             "    .popsection",
         );
 
-        paste::paste! {
+        $crate::paste::paste! {
             #[link(name = "" $library, kind = "" $kind)]
             extern "C" {
                 #[link_name = "OBJC_CLASS_$_" $ident]
@@ -54,14 +54,14 @@ macro_rules! extern_class {
 
         impl core::fmt::Debug for $ident {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                let obj = self.as_ptr();
+                let obj = $crate::Object::as_ptr(self);
                 // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid
                 // pointer to an Objective-C object.
                 unsafe { &*obj }.fmt(f)
             }
         }
 
-        paste::paste! {
+        $crate::paste::paste! {
             impl $crate::Object for $ident {
                 #[inline]
                 fn class_type() -> &'static $crate::objc_class {
@@ -71,7 +71,7 @@ macro_rules! extern_class {
                 }
             }
 
-            impl NSObjectProtocol for $ident {}
+            impl $crate::NSObjectProtocol for $ident {}
             $(impl [< $super Interface >] for $ident {})*
             impl [< $ident Interface >] for $ident {}
         }
@@ -150,7 +150,7 @@ macro_rules! selector {
         );
 
         extern "C" {
-            paste::paste! {
+            $crate::paste::paste! {
                 #[link_name = "SELECTOR_" $ident]
                 static $ident: *const u8;
             }
