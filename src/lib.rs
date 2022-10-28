@@ -112,6 +112,8 @@ selector!(OBJECTATINDEX_ = "objectAtIndex:");
 
 #[macro_use]
 mod macros;
+#[macro_use]
+pub mod sel;
 
 mod arc;
 mod boxed;

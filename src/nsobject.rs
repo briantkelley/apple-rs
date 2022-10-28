@@ -1,15 +1,8 @@
 use crate::sys::{objc_alloc, objc_opt_new};
-use crate::{id, image_info, objc_class, objc_object, Box, Object};
+use crate::{id, objc_class, objc_object, Box, Object};
 use core::ptr::NonNull;
 
 extern_class!(objc, kind = dylib, pub NSObject);
-
-selector!(HASH = "hash");
-selector!(IS_EQUAL_ = "isEqual:");
-selector!(IS_PROXY = "isProxy");
-selector!(SUPERCLASS = "superclass");
-
-image_info!();
 
 /// The group of methods that are fundamental to all Objective-C objects.
 pub trait NSObjectProtocol: Object {

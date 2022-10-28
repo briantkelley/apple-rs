@@ -78,23 +78,6 @@ macro_rules! extern_class {
     };
 }
 
-/// Use in each crate that defines or uses Objective-C metadata (e.g. class, selectors, categories).
-///
-/// Adds an `__objc_imageinfo` segment to the `__DATA` section so that the runtime will load and fix
-/// up the Objective-C metadata.
-#[macro_export]
-macro_rules! image_info {
-    () => {
-        core::arch::global_asm!(
-            "    .pushsection __DATA,__objc_imageinfo,regular,no_dead_strip",
-            "L_OBJC_IMAGE_INFO:",
-            "    .long    0",
-            "    .long    0",
-            "    .popsection",
-        );
-    };
-}
-
 /// A macro to type cast `objc_msgSend` with the correct return type and argument types so the
 /// compiler can pass the arguments as required by the ABI.
 #[macro_export]
@@ -124,12 +107,13 @@ macro_rules! msg_send {
 }
 
 /// A convenience macro to wrap the read of a selector symbol in an `unsafe` block.
+#[allow(clippy::crate_in_macro_def)]
 #[macro_export]
 macro_rules! sel {
     [$cmd:ident] => {
         // SAFETY: Rust code never reads through the reference. The reference is passed to the
         // Objective-C runtime, which is the owner of the data type.
-        unsafe { $cmd }
+        unsafe { crate::sel::$cmd }
     }
 }
 
@@ -152,7 +136,7 @@ macro_rules! selector {
         extern "C" {
             $crate::paste::paste! {
                 #[link_name = "SELECTOR_" $ident]
-                static $ident: *const u8;
+                pub(super) static $ident: *const u8;
             }
         }
     };
