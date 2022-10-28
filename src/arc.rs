@@ -1,0 +1,138 @@
+use crate::sys::{objc_object, objc_release, objc_retain};
+use crate::{id, Box, Object, Rc};
+use core::borrow::Borrow;
+use core::fmt::{self, Debug, Formatter};
+use core::marker::PhantomData;
+use core::mem::forget;
+use core::ops::Deref;
+use core::ptr::NonNull;
+
+/// A thread-safe reference-counting pointer for an Objective-C object instance. ‘Arc’ is a double
+/// entendre that stands for both ‘Atomically Reference Counted’ (like `std::sync::Arc`) and
+/// ‘Automatic Reference Counting’ (like the Clang Objective-C [language feature][clang]).
+///
+/// The type `Arc<T>` provides shared ownership of an Objective-C object instance with an interface
+/// trait of type `T`, allocated in the heap. Invoking [`clone`][clone] on `Arc` produces a new
+/// `Arc` instance, which points to the same allocation on the heap as the source `Arc`, while
+/// increasing a reference count. When the last `Arc` pointer to a given allocation is destroyed,
+/// the value stored in that allocation (often referred to as “inner value”) is also dropped.
+///
+/// Shared references in Rust disallow mutation by default, and `Arc` is no exception: you cannot
+/// generally obtain a mutable reference to something inside an Arc.
+///
+/// [clang]: https://clang.llvm.org/docs/AutomaticReferenceCounting.html
+/// [clone]: Clone::clone
+#[repr(transparent)]
+pub struct Arc<T>
+where
+    T: Object,
+{
+    obj: NonNull<objc_object>,
+    phantom: PhantomData<T>,
+}
+
+impl<T> Arc<T>
+where
+    T: Object,
+{
+    /// Creates a reference-counting pointer from a uniquely owned Objective-C object pointer.
+    #[must_use]
+    pub fn new(ptr: Box<T>) -> Self {
+        let obj = ptr.obj;
+        forget(ptr);
+        Self {
+            obj,
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl<T> AsRef<T> for Arc<T>
+where
+    T: Object,
+{
+    fn as_ref(&self) -> &T {
+        self
+    }
+}
+
+impl<T> Borrow<T> for Arc<T>
+where
+    T: Object,
+{
+    fn borrow(&self) -> &T {
+        self
+    }
+}
+
+impl<T> Clone for Arc<T>
+where
+    T: Object,
+{
+    fn clone(&self) -> Self {
+        Self::new_retaining(self.obj)
+    }
+}
+
+impl<T> Debug for Arc<T>
+where
+    T: Object,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.obj.as_ptr().fmt(f)
+    }
+}
+
+impl<T> Deref for Arc<T>
+where
+    T: Object,
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        let obj = self.obj.as_ptr().cast();
+        // SAFETY: An object pointer owned by `Arc<T>` is guaranteed to be valid.
+        unsafe { &*obj }
+    }
+}
+
+impl<T> Drop for Arc<T>
+where
+    T: Object,
+{
+    fn drop(&mut self) {
+        let obj = self.obj.as_ptr();
+        // SAFETY: An object pointer owned by `Arc<T>` is guaranteed to be valid. The ownership must
+        // be relinquished when the `Arc<T>` instance is destroyed.
+        unsafe { objc_release(obj) }
+    }
+}
+
+impl<T> Rc for Arc<T>
+where
+    T: Object,
+{
+    type T = T;
+
+    fn new_retaining(obj: NonNull<objc_object>) -> Self {
+        // SAFETY: Caller is responsible for ensuring `obj` is a valid, balanced object pointer.
+        let _ = unsafe { objc_retain(obj.as_ptr()) };
+        Self {
+            obj,
+            phantom: PhantomData,
+        }
+    }
+
+    unsafe fn new_transfer(obj: NonNull<objc_object>) -> Self {
+        Self {
+            obj,
+            phantom: PhantomData,
+        }
+    }
+
+    fn into_retained_ptr(self) -> id {
+        let obj = self.obj;
+        forget(self);
+        obj.as_ptr()
+    }
+}

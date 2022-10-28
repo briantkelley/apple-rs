@@ -1,0 +1,31 @@
+[package]
+authors = [
+    "Brian T. Kelley <brian@briantkelley.com>",
+]
+categories = [
+    "api-bindings",
+    "no-std",
+    "os::macos-apis",
+]
+description = "Idiomatic Rust bindings for Apple's Objective-C runtime."
+edition = "2021"
+keywords = [
+    "apple",
+    "objc",
+    "objective-c",
+]
+license = "Apache-2.0"
+name = "objc4"
+repository = "https://github.com/briantkelley/rust-objc4"
+rust-version = "1.64"
+version = "0.0.1"
+
+[dependencies]
+paste = "1.0.9"
+
+[profile.bench]
+overflow-checks = true
+
+[profile.release]
+overflow-checks = true
+panic = "abort"
