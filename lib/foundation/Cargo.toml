@@ -7,19 +7,19 @@ categories = [
     "no-std",
     "os::macos-apis",
 ]
-description = "Idiomatic Rust bindings for Apple's Objective-C runtime."
+description = "Idiomatic Rust bindings for Apple's Foundation framework."
 edition = "2021"
 keywords = [
     "apple",
+    "foundation",
     "objc",
     "objective-c",
 ]
 license = "Apache-2.0"
-name = "objc4"
-readme = "../../README.md"
+name = "objc4_foundation"
 repository = "https://github.com/briantkelley/rust-objc4"
 rust-version = "1.64"
 version = "0.0.1"
 
 [dependencies]
-paste = { git = "https://github.com/briantkelley/paste.git", branch = "paste-literal" }
+objc4 = { path = "../objc4" }
