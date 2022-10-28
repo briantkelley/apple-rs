@@ -97,7 +97,7 @@ where
 {
     type T = T;
 
-    fn new_retaining(obj: NonNull<objc_object>) -> Self {
+    fn with_retained(obj: NonNull<objc_object>) -> Self {
         // SAFETY: Caller is responsible for ensuring `obj` is a valid, balanced object pointer.
         let _ = unsafe { objc_retain(obj.as_ptr()) };
         Self {
@@ -106,7 +106,7 @@ where
         }
     }
 
-    unsafe fn new_transfer(obj: NonNull<objc_object>) -> Self {
+    unsafe fn with_transfer(obj: NonNull<objc_object>) -> Self {
         Self {
             obj,
             phantom: PhantomData,

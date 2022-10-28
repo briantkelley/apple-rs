@@ -78,7 +78,7 @@ pub trait NSObjectInterface: NSObjectProtocol {
         // SAFETY: The trait implementation guarantees `cls` is a valid Objective-C class.
         let obj = NonNull::new(unsafe { objc_opt_new(cls as *mut _) }).unwrap();
         // SAFETY: Objects retured by selectors beginning with ‘new’ must be released.
-        unsafe { Box::new_transfer(obj) }
+        unsafe { Box::with_transfer(obj) }
     }
 }
 

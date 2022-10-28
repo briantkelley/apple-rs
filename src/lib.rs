@@ -27,7 +27,7 @@ trait and default implementation may be implemented as follows:
 ```compile_fail
 pub trait NSArrayInterface: NSObjectInterface {
     #[must_use]
-    fn new_with_objects(objects: &[id]) -> Box<Self> {
+    fn with_objects(objects: &[id]) -> Box<Self> {
         let obj = msg_send!(id, *const id, usize)(
             Self::alloc().as_ptr(),
             sel![INITWITHOBJECTS_COUNT_],
@@ -37,7 +37,7 @@ pub trait NSArrayInterface: NSObjectInterface {
         // SAFETY: Objects returned by selectors beginning with ‘alloc’ must be released.
         // Panics: -initWithObjects: has a non-null return type annotation so the unwrap()
         // panic if that specification is violated.
-        unsafe { Box::new_transfer(NonNull::new(obj).unwrap()) }
+        unsafe { Box::with_transfer(NonNull::new(obj).unwrap()) }
     }
 
     #[must_use]
