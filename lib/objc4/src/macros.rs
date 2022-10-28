@@ -4,32 +4,23 @@ pub use paste;
 /// all the given class hierarchy traits.
 #[macro_export]
 macro_rules! extern_class {
-    // -kind, -vis
-    ($library:ident, $ident:ident) => {
-        extern_class!($library, $ident,);
+    // -kind
+    ($library:ident, $vis:vis $($class:ident),+) => {
+        $crate::extern_class!($library, kind = framework, $vis $($class),+);
     };
-    ($library:ident, $ident:ident, $($super:ident),*) => {
-        extern_class!($library, kind = framework, $ident, $($super),*);
+    // +kind
+    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident),+) => {
+        $crate::extern_class!(@ $library; $kind; $vis $($class),+);
     };
-    // +kind, -vis
-    ($library:ident, kind = $kind:ident, $ident:ident) => {
-        extern_class!($library, kind = $kind, $ident,);
+    // private impl
+    (@ $library:ident; $kind:ident; $vis:vis $ident:ident, $($super:ident),+) => {
+        $crate::extern_class!(@ $library; $kind; $vis $ident);
+
+        $crate::paste::paste! {
+            $(impl [< $super Interface >] for $ident {})+
+        }
     };
-    ($library:ident, kind = $kind:ident, $ident:ident, $($super:ident),*) => {
-        extern_class!($library, kind = $kind, pub(self) $ident, $($super),*);
-    };
-    // -kind, +vis
-    ($library:ident, $vis:vis $ident:ident) => {
-        extern_class!($library, $vis $ident,);
-    };
-    ($library:ident, $vis:vis $ident:ident, $($super:ident),*) => {
-        extern_class!($library, kind = framework, $vis $ident, $($super),*);
-    };
-    // +kind, +vis
-    ($library:ident, kind = $kind:ident, $vis:vis $ident:ident) => {
-        extern_class!($library, kind = $kind, $vis $ident,);
-    };
-    ($library:ident, kind = $kind:ident, $vis:vis $ident:ident, $($super:ident),*) => {
+    (@ $library:ident; $kind:ident; $vis:vis $ident:ident) => {
         core::arch::global_asm!(
             "    .pushsection __DATA,__objc_classrefs,regular,no_dead_strip",
             "    .p2align 3",
@@ -48,9 +39,9 @@ macro_rules! extern_class {
 
         #[allow(missing_copy_implementations, missing_docs)]
         #[repr(C)]
-        $vis struct $ident {
-            _isa: [u8; core::mem::size_of::<usize>()],
-        }
+        $vis struct $ident (
+            [u8; core::mem::size_of::<usize>()],
+        );
 
         impl core::fmt::Debug for $ident {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -72,7 +63,6 @@ macro_rules! extern_class {
             }
 
             impl $crate::NSObjectProtocol for $ident {}
-            $(impl [< $super Interface >] for $ident {})*
             impl [< $ident Interface >] for $ident {}
         }
     };
@@ -82,25 +72,14 @@ macro_rules! extern_class {
 /// compiler can pass the arguments as required by the ABI.
 #[macro_export]
 macro_rules! msg_send {
-    ($ret:ty) => {
-        // SAFETY: Assume the user of the macro provided the correct return type, receiver type, and
-        // selector instance.
-        unsafe {
-            let untyped: unsafe extern "C" fn() = $crate::objc_msgSend;
-            core::mem::transmute::<
-                _,
-                extern "C" fn($crate::id, *const u8) -> $ret,
-            >(untyped)
-        }
-    };
-    ($ret:ty, $($ty:ty),+) => {
+    ($ret:ty $(, $ty:ty)*) => {
         // SAFETY: Assume the user of the macro provided the correct return type, receiver type,
         // selector instance, and argument types.
         unsafe {
             let untyped: unsafe extern "C" fn() = $crate::objc_msgSend;
             core::mem::transmute::<
                 _,
-                extern "C" fn($crate::id, *const u8, $($ty),+) -> $ret,
+                extern "C" fn($crate::id, *const u8 $(, $ty)*) -> $ret,
             >(untyped)
         }
     };
