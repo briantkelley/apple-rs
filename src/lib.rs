@@ -118,7 +118,6 @@ mod boxed;
 mod class;
 mod objc;
 mod object;
-mod rc;
 mod sys;
 
 pub use arc::Arc;
@@ -127,5 +126,4 @@ pub use class::*;
 pub use macros::paste;
 pub use objc::{NSObject, NSObjectInterface, NSObjectProtocol};
 pub use object::Object;
-pub use rc::Rc;
 pub use sys::{id, objc_class, objc_msgSend, objc_object, Class};

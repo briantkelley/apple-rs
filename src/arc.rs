@@ -1,5 +1,5 @@
 use crate::sys::{objc_object, objc_release, objc_retain};
-use crate::{id, Box, Object, Rc};
+use crate::{Box, Object};
 use core::borrow::Borrow;
 use core::fmt::{self, Debug, Formatter};
 use core::marker::PhantomData;
@@ -40,6 +40,36 @@ where
     pub fn new(ptr: Box<T>) -> Self {
         let obj = ptr.obj;
         forget(ptr);
+        Self {
+            obj,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Constructs a reference-counting pointer from a raw, balanced, non-null Objective-C object
+    /// instance pointer.
+    ///
+    /// To avoid a memory leak, the object must not require an additional release.
+    #[must_use]
+    pub fn with_retained(obj: NonNull<objc_object>) -> Self {
+        // SAFETY: Caller is responsible for ensuring `obj` is a valid, balanced object pointer.
+        let _ = unsafe { objc_retain(obj.as_ptr()) };
+        Self {
+            obj,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Constructs a reference-counting pointer from a raw, non-null Objective-C object instance
+    /// pointer, and takes ownership from the caller (i.e. balancing an outstand +1 retain count
+    /// with a release).
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because improper use may lead to memory unsafety (via over-release),
+    /// even if the returned reference-counting pointer is never accessed.
+    #[must_use]
+    pub const unsafe fn with_transfer(obj: NonNull<objc_object>) -> Self {
         Self {
             obj,
             phantom: PhantomData,
@@ -105,34 +135,5 @@ where
         // SAFETY: An object pointer owned by `Arc<T>` is guaranteed to be valid. The ownership must
         // be relinquished when the `Arc<T>` instance is destroyed.
         unsafe { objc_release(obj) }
-    }
-}
-
-impl<T> Rc for Arc<T>
-where
-    T: Object,
-{
-    type T = T;
-
-    fn with_retained(obj: NonNull<objc_object>) -> Self {
-        // SAFETY: Caller is responsible for ensuring `obj` is a valid, balanced object pointer.
-        let _ = unsafe { objc_retain(obj.as_ptr()) };
-        Self {
-            obj,
-            phantom: PhantomData,
-        }
-    }
-
-    unsafe fn with_transfer(obj: NonNull<objc_object>) -> Self {
-        Self {
-            obj,
-            phantom: PhantomData,
-        }
-    }
-
-    fn into_retained_ptr(self) -> id {
-        let obj = self.obj;
-        forget(self);
-        obj.as_ptr()
     }
 }

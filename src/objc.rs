@@ -1,5 +1,5 @@
 use crate::sys::{objc_alloc, objc_opt_new};
-use crate::{id, image_info, objc_class, objc_object, Box, Object, Rc};
+use crate::{id, image_info, objc_class, objc_object, Box, Object};
 use core::ptr::NonNull;
 
 extern_class!(objc, kind = dylib, pub NSObject);
