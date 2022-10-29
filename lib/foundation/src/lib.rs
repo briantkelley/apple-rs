@@ -61,4 +61,6 @@ pub mod sel;
 
 mod string;
 
-pub use string::{NSString, NSStringEncoding, NSStringInterface};
+pub use string::{
+    NSString, NSStringClass, NSStringClassInterface, NSStringEncoding, NSStringInterface,
+};

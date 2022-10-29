@@ -8,7 +8,7 @@ extern_class!(objc, kind = dylib, pub NSObject 'cls);
 pub trait NSObjectProtocol: Object {
     /// Returns a Boolean value that indicates whether the receiver and a given object are equal.
     #[inline]
-    fn is_equal(&self, object: &impl Object) -> bool {
+    fn is_equal(&self, object: &dyn Object) -> bool {
         msg_send!(bool, id)(self.as_ptr(), sel![IS_EQUAL_], object.as_ptr())
     }
 
@@ -35,7 +35,14 @@ pub trait NSObjectProtocol: Object {
 
 /// The root class of most Objective-C class hierarchies, from which subclasses inherit a basic
 /// interface to the runtime system and the ability to behave as Objective-C objects.
-pub trait NSObjectInterface: NSObjectProtocol {
+pub trait NSObjectInterface: NSObjectProtocol {}
+
+/// The root meta class of most Objective-C class hierarchies, from which subclasses inherit a basic
+/// interface to the runtime system and the ability to behave as Objective-C objects.
+pub trait NSObjectClassInterface {
+    /// The concrete type that implements class instance interface.
+    type Instance: NSObjectInterface;
+
     /// Returns a new instance of the class.
     ///
     /// After calling this function, the caller is responsible for ensuring the object pointer is
@@ -47,10 +54,10 @@ pub trait NSObjectInterface: NSObjectProtocol {
     /// Objective-C runtime will trap if allocation fails. However, if a subclass overrides this
     /// method and returns `nil`, this binding method will panic.
     #[must_use]
-    fn alloc() -> NonNull<objc_object> {
-        let cls: *const _ = Self::class_type();
-        // SAFETY: Rust code never reads through the reference that is passed as a pointer to the
-        // Objective-C runtime, which is the owner of the data structure.
+    fn alloc(&self) -> NonNull<objc_object> {
+        let cls: *const _ = self;
+        // SAFETY: `self` is a reference so it is guaranteed to be a valid pointer to an Objective-C
+        // meta class object.
         NonNull::new(unsafe { objc_alloc(cls as *mut _) }).unwrap()
     }
 
@@ -65,9 +72,10 @@ pub trait NSObjectInterface: NSObjectProtocol {
     /// The Swift API notes for this method specify the return type is non-null. Typically the
     /// Objective-C runtime will trap if allocation fails. However, if a subclass overrides `+alloc`
     /// or `-init` and returns `nil`, this binding method will panic.
+    #[allow(clippy::wrong_self_convention)]
     #[must_use]
-    fn new() -> Box<Self> {
-        let cls: *const _ = Self::class_type();
+    fn new(&self) -> Box<Self::Instance> {
+        let cls: *const _ = self;
         // SAFETY: The trait implementation guarantees `cls` is a valid Objective-C class.
         let obj = NonNull::new(unsafe { objc_opt_new(cls as *mut _) }).unwrap();
         // SAFETY: Objects retured by selectors beginning with ‘new’ must be released.
@@ -75,31 +83,27 @@ pub trait NSObjectInterface: NSObjectProtocol {
     }
 }
 
-/// The root meta class of most Objective-C class hierarchies, from which subclasses inherit a basic
-/// interface to the runtime system and the ability to behave as Objective-C objects.
-pub trait NSObjectClassInterface {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_class() {
-        let lhs: *const _ = NSObject::new().class();
+        let lhs: *const _ = NSObjectClass.new().class();
         let rhs: *const _ = NSObjectClass;
         assert_eq!(lhs, rhs.cast());
     }
 
     #[test]
     fn test_hash() {
-        let o = NSObject::new();
+        let o = NSObjectClass.new();
         assert_eq!(o.hash(), o.as_ptr() as usize);
     }
 
     #[test]
     fn test_is_equal() {
-        let a = NSObject::new();
-        let b = NSObject::new();
+        let a = NSObjectClass.new();
+        let b = NSObjectClass.new();
 
         assert!(a.is_equal(&*a));
         assert!(b.is_equal(&*b));
@@ -110,11 +114,11 @@ mod tests {
 
     #[test]
     fn test_is_proxy() {
-        assert!(!NSObject::new().is_proxy());
+        assert!(!NSObjectClass.new().is_proxy());
     }
 
     #[test]
     fn test_superclass() {
-        assert!(matches!(NSObject::new().superclass(), None));
+        assert!(matches!(NSObjectClass.new().superclass(), None));
     }
 }

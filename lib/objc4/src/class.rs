@@ -25,12 +25,7 @@ impl Debug for objc_class {
 }
 
 impl Eq for objc_class {}
-
-impl Object for objc_class {
-    fn class_type() -> &'static objc_class {
-        panic!() // There is no root class type in Objective-C
-    }
-}
+impl Object for objc_class {}
 
 // Class objects are uniqued so a pointer comparison is sufficient for equality.
 impl PartialEq for objc_class {

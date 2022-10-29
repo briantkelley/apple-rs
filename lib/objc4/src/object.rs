@@ -6,10 +6,7 @@ use core::fmt::{self, Debug, Formatter};
 /// An trait that serves as the base type for Objective-C objects.
 ///
 /// Includes bindings to the Objective-C runtime functions whose names begin with `object_`.
-pub trait Object: Debug + Sized {
-    /// Gets the Objective-C class representing the trait type.
-    fn class_type() -> &'static objc_class;
-
+pub trait Object: Debug {
     /// Returns the class of the object.
     fn class(&self) -> &objc_class {
         let obj = self.as_ptr();
@@ -38,10 +35,6 @@ pub trait Object: Debug + Sized {
 }
 
 impl Object for id {
-    fn class_type() -> &'static objc_class {
-        panic!() // The "any object" type does not have a class type.
-    }
-
     fn as_ptr(&self) -> id {
         *self
     }
@@ -56,8 +49,4 @@ impl Debug for objc_object {
     }
 }
 
-impl Object for objc_object {
-    fn class_type() -> &'static objc_class {
-        panic!() // There is no root class type in Objective-C
-    }
-}
+impl Object for objc_object {}

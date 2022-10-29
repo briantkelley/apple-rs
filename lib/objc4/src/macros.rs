@@ -72,14 +72,7 @@ macro_rules! extern_class {
         $crate::paste::paste! {
             impl $(< $($param),+ >)? $crate::Object for $ident $(< $($param),+ >)?
             $(where $($param : $ty),+)?
-            {
-                #[inline]
-                fn class_type() -> &'static $crate::objc_class {
-                    let cls: *const _ = [< $ident Class >];
-                    // SAFETY: Type conversion of static data from meta class to any class.
-                    unsafe { &*cls.cast() }
-                }
-            }
+            {}
 
             impl $(< $($param),+ >)? $crate::NSObjectProtocol for $ident $(< $($param),+ >)?
             $(where $($param : $ty),+)?
@@ -93,7 +86,7 @@ macro_rules! extern_class {
         }
     };
     (@2 $ident:ident $($meta:lifetime)? $(< $($class_param:ident),+ >)?; $super:ident $($super_meta:lifetime)? $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@3 $ident, $super $($meta)?);
+        $crate::extern_class!(@3 $ident, $super $($super_meta)?);
         $crate::paste::paste! {
             impl $(< $($param),+ >)? [< $super Interface >] for $ident $(< $($param),+ >)?
             $(where $($param : $ty),+)?
@@ -109,7 +102,9 @@ macro_rules! extern_class {
     (@3 $ident:ident, $super:ident) => {};
     (@3 $ident:ident, NSObject 'cls) => {
         $crate::paste::paste! {
-            impl NSObjectClassInterface for [< $ident MetaClass >] {}
+            impl $crate::NSObjectClassInterface for [< $ident MetaClass >] {
+                type Instance = $ident;
+            }
         }
     };
     (@3 $ident:ident, $super:ident 'cls) => {
