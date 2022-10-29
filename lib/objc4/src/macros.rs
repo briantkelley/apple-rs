@@ -5,19 +5,19 @@ pub use paste;
 #[macro_export]
 macro_rules! extern_class {
     // -kind
-    ($library:ident, $vis:vis $($class:ident $(< $($param:ident : $ty:path),+ >)?),+) => {
-        $crate::extern_class!(@1 $library; framework; $vis $($class $(< $($param : $ty),+ >)?),+);
+    ($library:ident, $vis:vis $($class:ident $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@1 $library; framework; $vis $($class $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
     // +kind
-    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident $(< $($param:ident : $ty:path),+ >)?),+) => {
-        $crate::extern_class!(@1 $library; $kind; $vis $($class $(< $($param : $ty),+ >)?),+);
+    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@1 $library; $kind; $vis $($class $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
     // private impl
-    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $(< $($param:ident : $ty:path),+ >)?, $($super:ident $(< $($super_param:ident : $super_ty:path),+ >)?),+) => {
-        $crate::extern_class!(@1 $library; $kind; $vis $ident $(< $($param : $ty),+ >)?);
-        $crate::extern_class!(@2 $ident; $(< $($param : $ty),+ >)?; $($super),+);
+    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $(< $($class_param:ident),+ >)?, $($super:ident $(< $($super_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@1 $library; $kind; $vis $ident $(< $($class_param),+ >)? $(; $($param : $ty),+)?);
+        $crate::extern_class!(@2 $ident $(< $($class_param),+ >)?; $($super $(< $($super_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
-    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $(< $($param:ident : $ty:path),+ >)?) => {
+    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $(< $($class_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
         core::arch::global_asm!(
             "    .pushsection __DATA,__objc_classrefs,regular,no_dead_strip",
             "    .p2align 3",
@@ -72,20 +72,22 @@ macro_rules! extern_class {
             impl $(< $($param),+ >)? [< $ident Interface >] for $ident $(< $($param),+ >)?
             $(where $($param : $ty),+)?
             {
-                $($(type $param = $param;)+)?
+                $($(type $class_param = $class_param;)+)?
             }
         }
     };
-    (@2 $ident:ident; $(< $($param:ident : $ty:path),+ >)?; $super:ident) => {
+    (@2 $ident:ident $(< $($class_param:ident),+ >)?; $super:ident $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
         $crate::paste::paste! {
             impl $(< $($param),+ >)? [< $super Interface >] for $ident $(< $($param),+ >)?
             $(where $($param : $ty),+)?
-            {}
+            {
+                $($(type $super_param = $super_param;)+)?
+            }
         }
     };
-    (@2 $ident:ident; $(< $($param:ident : $ty:path),+ >)?; $super:ident, $($ancestors:ident),+) => {
-        $crate::extern_class!(@2 $ident; $(< $($param : $ty),+ >)?; $super);
-        $crate::extern_class!(@2 $ident; $(< $($param : $ty),+ >)?; $($ancestors),+);
+    (@2 $ident:ident $(< $($class_param:ident),+ >)?; $super:ident $(< $($super_param:ident),+ >)?, $($ancestors:ident $(< $($ancestor_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@2 $ident $(< $($class_param),+ >)?; $super $(< $($super_param),+ >)? $(; $($param : $ty),+)?);
+        $crate::extern_class!(@2 $ident $(< $($class_param),+ >)?; $($ancestors $(< $($ancestor_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
 }
 
