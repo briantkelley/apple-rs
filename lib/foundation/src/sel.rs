@@ -6,6 +6,7 @@ use objc4::selector;
 #[macro_export]
 macro_rules! all_selectors {
     () => {
+        selector!(COPY = "copy");
         selector!(INITWITHBYTES_LENGTH_ENCODING_ = "initWithBytes:length:encoding:");
         selector!(LENGTH = "length");
         selector!(UTF8STRING = "UTF8String");

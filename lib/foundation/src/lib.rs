@@ -59,8 +59,10 @@ mod macros;
 #[macro_use]
 pub mod sel;
 
+mod object;
 mod string;
 
+pub use object::NSCopying;
 pub use string::{
     NSString, NSStringClass, NSStringClassInterface, NSStringEncoding, NSStringInterface,
 };

@@ -1,3 +1,4 @@
+use crate::NSCopying;
 use core::ffi::{c_char, CStr};
 use core::ptr::NonNull;
 use objc4::{extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface};
@@ -90,6 +91,10 @@ pub trait NSStringInterface: NSObjectInterface {
     }
 }
 
+impl NSCopying for NSString {
+    type Result = Self;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -97,6 +102,14 @@ mod tests {
     use objc4::NSObjectProtocol;
 
     string_literal!(static HELLO_WORLD: NSString = "Hello, World!");
+
+    #[test]
+    fn test_copy() {
+        let orig = unsafe { &HELLO_WORLD };
+        let copy = orig.copy();
+
+        assert!(orig.is_equal(&*copy));
+    }
 
     #[test]
     fn test_conversion() {
