@@ -17,7 +17,7 @@ and implements traits for its class hierarchy. For example, the following create
 `NSArray`, which inherits from `NSObject`, and is defined in the `Foundation` framework:
 
 ```compile_fail
-extern_class!(Foundation, pub NSArray, NSObject);
+extern_class!(Foundation, pub NSArray, NSObject 'cls);
 ```
 
 Because Rust does not have type inheritance, the class interface is implemented by a trait whose
@@ -126,6 +126,9 @@ pub use arc::Arc;
 pub use boxed::Box;
 pub use class::*;
 pub use macros::paste;
-pub use nsobject::{NSObject, NSObjectInterface, NSObjectProtocol};
+pub use nsobject::{
+    NSObject, NSObjectClass, NSObjectClassInterface, NSObjectInterface, NSObjectMetaClass,
+    NSObjectProtocol,
+};
 pub use object::Object;
 pub use sys::{id, objc_class, objc_msgSend, objc_object, Class};

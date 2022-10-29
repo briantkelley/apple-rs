@@ -2,7 +2,7 @@ use crate::sys::{objc_alloc, objc_opt_new};
 use crate::{id, objc_class, objc_object, Box, Object};
 use core::ptr::NonNull;
 
-extern_class!(objc, kind = dylib, pub NSObject);
+extern_class!(objc, kind = dylib, pub NSObject 'cls);
 
 /// The group of methods that are fundamental to all Objective-C objects.
 pub trait NSObjectProtocol: Object {
@@ -75,13 +75,19 @@ pub trait NSObjectInterface: NSObjectProtocol {
     }
 }
 
+/// The root meta class of most Objective-C class hierarchies, from which subclasses inherit a basic
+/// interface to the runtime system and the ability to behave as Objective-C objects.
+pub trait NSObjectClassInterface {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_class() {
-        assert_eq!(NSObject::new().class(), unsafe { &NSObjectClass });
+        let lhs: *const _ = NSObject::new().class();
+        let rhs: *const _ = NSObjectClass;
+        assert_eq!(lhs, rhs.cast());
     }
 
     #[test]

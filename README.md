@@ -19,7 +19,7 @@ and implements traits for its class hierarchy. For example, the following create
 `NSArray`, which inherits from `NSObject`, and is defined in the `Foundation` framework:
 
 ```rust
-extern_class!(Foundation, pub NSArray, NSObject);
+extern_class!(Foundation, pub NSArray, NSObject 'cls);
 ```
 
 Because Rust does not have type inheritance, the class interface is implemented by a trait whose

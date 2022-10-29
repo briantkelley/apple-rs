@@ -5,19 +5,19 @@ pub use paste;
 #[macro_export]
 macro_rules! extern_class {
     // -kind
-    ($library:ident, $vis:vis $($class:ident $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@1 $library; framework; $vis $($class $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
+    ($library:ident, $vis:vis $($class:ident $($meta:lifetime)? $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@1 $library; framework; $vis $($class $($meta)? $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
     // +kind
-    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@1 $library; $kind; $vis $($class $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
+    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident $($meta:lifetime)? $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@1 $library; $kind; $vis $($class $($meta)? $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
     // private impl
-    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $(< $($class_param:ident),+ >)?, $($super:ident $(< $($super_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@1 $library; $kind; $vis $ident $(< $($class_param),+ >)? $(; $($param : $ty),+)?);
-        $crate::extern_class!(@2 $ident $(< $($class_param),+ >)?; $($super $(< $($super_param),+ >)?),+ $(; $($param : $ty),+)?);
+    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $($meta:lifetime)? $(< $($class_param:ident),+ >)?, $($super:ident $($super_meta:lifetime)? $(< $($super_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@1 $library; $kind; $vis $ident $($meta)? $(< $($class_param),+ >)? $(; $($param : $ty),+)?);
+        $crate::extern_class!(@2 $ident $($meta)? $(< $($class_param),+ >)?; $($super $($super_meta)? $(< $($super_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
-    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $(< $($class_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
+    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $($meta:lifetime)? $(< $($class_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
         core::arch::global_asm!(
             "    .pushsection __DATA,__objc_classrefs,regular,no_dead_strip",
             "    .p2align 3",
@@ -30,9 +30,26 @@ macro_rules! extern_class {
             #[link(name = "" $library, kind = "" $kind)]
             extern "C" {
                 #[link_name = "OBJC_CLASS_$_" $ident]
-                static [< $ident Class >]: $crate::objc_class;
+                static [< _ $ident Class >]: [< $ident MetaClass >];
+            }
+
+            #[allow(missing_docs, non_upper_case_globals)]
+            $vis static [< $ident Class >]: &[< $ident MetaClass >] = unsafe { &[< _ $ident Class >] };
+
+            #[allow(missing_copy_implementations, missing_docs)]
+            #[repr(transparent)]
+            $vis struct [< $ident MetaClass >] (
+                $crate::objc_class,
+            );
+
+            impl core::fmt::Debug for [< $ident MetaClass >] {
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    self.0.fmt(f)
+                }
             }
         }
+
+        $crate::extern_class!(@3 $ident, $ident $($meta)?);
 
         #[allow(missing_copy_implementations, missing_docs)]
         #[repr(C)]
@@ -40,7 +57,6 @@ macro_rules! extern_class {
             [u8; core::mem::size_of::<usize>()],
             $($(core::marker::PhantomData<$param>,)+)?
         );
-
 
         impl $(< $($param),+ >)? core::fmt::Debug for $ident $(< $($param),+ >)?
         $(where $($param : $ty),+)?
@@ -59,9 +75,9 @@ macro_rules! extern_class {
             {
                 #[inline]
                 fn class_type() -> &'static $crate::objc_class {
-                    // SAFETY: Rust code never reads through the reference. The reference is passed
-                    // to the Objective-C runtime, which is the owner of the data structure.
-                    unsafe { &[< $ident Class >] }
+                    let cls: *const _ = [< $ident Class >];
+                    // SAFETY: Type conversion of static data from meta class to any class.
+                    unsafe { &*cls.cast() }
                 }
             }
 
@@ -76,7 +92,8 @@ macro_rules! extern_class {
             }
         }
     };
-    (@2 $ident:ident $(< $($class_param:ident),+ >)?; $super:ident $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
+    (@2 $ident:ident $($meta:lifetime)? $(< $($class_param:ident),+ >)?; $super:ident $($super_meta:lifetime)? $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@3 $ident, $super $($meta)?);
         $crate::paste::paste! {
             impl $(< $($param),+ >)? [< $super Interface >] for $ident $(< $($param),+ >)?
             $(where $($param : $ty),+)?
@@ -85,9 +102,20 @@ macro_rules! extern_class {
             }
         }
     };
-    (@2 $ident:ident $(< $($class_param:ident),+ >)?; $super:ident $(< $($super_param:ident),+ >)?, $($ancestors:ident $(< $($ancestor_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@2 $ident $(< $($class_param),+ >)?; $super $(< $($super_param),+ >)? $(; $($param : $ty),+)?);
-        $crate::extern_class!(@2 $ident $(< $($class_param),+ >)?; $($ancestors $(< $($ancestor_param),+ >)?),+ $(; $($param : $ty),+)?);
+    (@2 $ident:ident $($meta:lifetime)? $(< $($class_param:ident),+ >)?; $super:ident $($super_meta:lifetime)? $(< $($super_param:ident),+ >)?, $($ancestors:ident $($ancestor_meta:lifetime)? $(< $($ancestor_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@2 $ident $($meta)? $(< $($class_param),+ >)?; $super $($super_meta)? $(< $($super_param),+ >)? $(; $($param : $ty),+)?);
+        $crate::extern_class!(@2 $ident $($meta)? $(< $($class_param),+ >)?; $($ancestors $($ancestor_meta)? $(< $($ancestor_param),+ >)?),+ $(; $($param : $ty),+)?);
+    };
+    (@3 $ident:ident, $super:ident) => {};
+    (@3 $ident:ident, NSObject 'cls) => {
+        $crate::paste::paste! {
+            impl NSObjectClassInterface for [< $ident MetaClass >] {}
+        }
+    };
+    (@3 $ident:ident, $super:ident 'cls) => {
+        $crate::paste::paste! {
+            impl [< $super ClassInterface >] for [< $ident MetaClass >] {}
+        }
     };
 }
 

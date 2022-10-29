@@ -31,7 +31,7 @@ pub enum NSStringEncoding {
     UTF32LittleEndian = 0x9c00_0100,
 }
 
-extern_class!(Foundation, pub NSString, NSObject);
+extern_class!(Foundation, pub NSString, NSObject 'cls);
 
 /// A static, plain-text Unicode string object.
 #[allow(clippy::len_without_is_empty)]
