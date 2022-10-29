@@ -86,7 +86,7 @@ macro_rules! extern_class {
         }
     };
     (@2 $ident:ident $($meta:lifetime)? $(< $($class_param:ident),+ >)?; $super:ident $($super_meta:lifetime)? $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@3 $ident, $super $($super_meta)?);
+        $crate::extern_class!(@3 $ident, $super $($super_meta)? $($($param : $ty),+)?);
         $crate::paste::paste! {
             impl $(< $($param),+ >)? [< $super Interface >] for $ident $(< $($param),+ >)?
             $(where $($param : $ty),+)?
@@ -99,7 +99,7 @@ macro_rules! extern_class {
         $crate::extern_class!(@2 $ident $($meta)? $(< $($class_param),+ >)?; $super $($super_meta)? $(< $($super_param),+ >)? $(; $($param : $ty),+)?);
         $crate::extern_class!(@2 $ident $($meta)? $(< $($class_param),+ >)?; $($ancestors $($ancestor_meta)? $(< $($ancestor_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
-    (@3 $ident:ident, $super:ident) => {};
+    (@3 $ident:ident, $super:ident $($($param:ident : $ty:path),+)?) => {};
     (@3 $ident:ident, NSObject 'cls) => {
         $crate::paste::paste! {
             impl $crate::NSObjectClassInterface for [< $ident MetaClass >] {
@@ -107,7 +107,17 @@ macro_rules! extern_class {
             }
         }
     };
-    (@3 $ident:ident, $super:ident 'cls) => {
+    (@3 $ident:ident, NSObject 'cls $($param:ident : $ty:path),+) => {
+        $crate::paste::paste! {
+            impl $crate::NSObjectClassInterface for [< $ident MetaClass >] {
+                // Use `id` for types with generic parameters. Otherwise, the meta class type would
+                // require generic parameters to specify the generic types on the associated type,
+                // which creates *n* meta class types where only 1 exists.
+                type Instance = $crate::NSObject;
+            }
+        }
+    };
+    (@3 $ident:ident, $super:ident 'cls $($($param:ident : $ty:path),+)?) => {
         $crate::paste::paste! {
             impl [< $super ClassInterface >] for [< $ident MetaClass >] {}
         }

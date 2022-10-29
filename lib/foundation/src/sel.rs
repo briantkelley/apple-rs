@@ -7,9 +7,13 @@ use objc4::selector;
 macro_rules! all_selectors {
     () => {
         selector!(COPY = "copy");
+        selector!(COUNT = "count");
         selector!(INITWITHBYTES_LENGTH_ENCODING_ = "initWithBytes:length:encoding:");
         selector!(ISEQUALTOSTRING_ = "isEqualToString:");
         selector!(LENGTH = "length");
+        selector!(OBJECTFORKEY_ = "objectForKey:");
+        selector!(REMOVEOBJECTFORKEY_ = "removeObjectForKey:");
+        selector!(SETOBJECT_FORKEY_ = "setObject:forKey:");
         selector!(UTF8STRING = "UTF8String");
     };
 }

@@ -4,14 +4,16 @@ Idiomatic Rust bindings for Apple's Foundation framework.
 
 ## Classes
 
-### `NSString`
+The crate includes support for creating and using instances of:
 
-The crate includes basic support for creating `NSString` instances and constants:
+* `NSDictionary` and `NSMutableDictionary`
+* `NSString` (including compile-time constants)
 
 ```rust
-// compile-time constant string
-string_literal!(static greeting: NSString = "Hello");
+string_literal!(static LOCATION: NSString = "location"); // compile-time constant
+let location = NSString::from_str("Bellevue");           // heap allocated
 
-// heap allocated string
-let location = NSString::from_str("Bellevue");
+let mut dict = NSMutableDictionary::<NSString, NSString>::new();
+dict.set(&LOCATION, location);
+assert_eq!(dict.len(), 1);
 ```

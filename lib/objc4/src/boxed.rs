@@ -61,6 +61,25 @@ where
         forget(self);
         obj.as_ptr()
     }
+
+    /// Converts the type interface from `T` to `U`. Assumes the caller guarantees safety.
+    ///
+    /// # Safety
+    ///
+    /// If the Objective-C object instance is not a kind of `U`, undefined behavior may occur if the
+    /// object is accessed or messaged.
+    #[must_use]
+    pub unsafe fn transmute_unchecked<U>(self) -> Box<U>
+    where
+        U: Object,
+    {
+        let new = Box::<U> {
+            obj: self.obj,
+            phantom: PhantomData,
+        };
+        forget(self);
+        new
+    }
 }
 
 impl<T> AsRef<T> for Box<T>
