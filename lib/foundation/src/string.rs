@@ -68,10 +68,16 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
 
 /// A static, plain-text Unicode string object.
 #[allow(clippy::len_without_is_empty)]
-pub trait NSStringInterface: NSObjectInterface {
+pub trait NSStringInterface: NSObjectInterface + NSCopying {
     /// The number of UTF-16 code units in the receiver.
     fn len(&self) -> usize {
         msg_send!(usize)(self.as_ptr(), sel![LENGTH])
+    }
+
+    /// Returns a boolean value that indicates whether a given string is equal to the receiver using
+    /// a literal Unicode-based comparison.
+    fn is_equal_to_string(&self, other: &dyn NSStringInterface<Result = NSString>) -> bool {
+        msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTOSTRING_], other.as_ptr())
     }
 
     /// A null-terminated UTF-8 representation of the string.
@@ -109,6 +115,7 @@ mod tests {
         let copy = orig.copy();
 
         assert!(orig.is_equal(&*copy));
+        assert!(orig.is_equal_to_string(&*copy));
     }
 
     #[test]
