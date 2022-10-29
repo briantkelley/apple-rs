@@ -64,6 +64,7 @@ pub mod sel;
 mod dictionary;
 mod object;
 mod string;
+mod value;
 
 pub use dictionary::{
     NSDictionary, NSDictionaryClass, NSDictionaryInterface, NSMutableDictionary,
@@ -72,4 +73,8 @@ pub use dictionary::{
 pub use object::NSCopying;
 pub use string::{
     NSString, NSStringClass, NSStringClassInterface, NSStringEncoding, NSStringInterface,
+};
+pub use value::{
+    NSNumber, NSNumberClass, NSNumberClassInterface, NSNumberInterface, NSValue, NSValueClass,
+    NSValueInterface,
 };

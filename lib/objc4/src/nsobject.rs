@@ -81,6 +81,12 @@ pub trait NSObjectClassInterface {
         // SAFETY: Objects retured by selectors beginning with ‘new’ must be released.
         unsafe { Box::with_transfer(obj) }
     }
+
+    /// Returns the non-null, generic Objective-C class pointer for the meta class.
+    fn as_ptr(&self) -> id {
+        let ptr: *const _ = self;
+        (ptr as *mut Self).cast()
+    }
 }
 
 #[cfg(test)]
