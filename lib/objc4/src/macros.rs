@@ -5,22 +5,19 @@ pub use paste;
 #[macro_export]
 macro_rules! extern_class {
     // -kind
-    ($library:ident, $vis:vis $($class:ident),+) => {
-        $crate::extern_class!($library, kind = framework, $vis $($class),+);
+    ($library:ident, $vis:vis $($class:ident $(< $($param:ident : $ty:path),+ >)?),+) => {
+        $crate::extern_class!(@1 $library; framework; $vis $($class $(< $($param : $ty),+ >)?),+);
     };
     // +kind
-    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident),+) => {
-        $crate::extern_class!(@ $library; $kind; $vis $($class),+);
+    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident $(< $($param:ident : $ty:path),+ >)?),+) => {
+        $crate::extern_class!(@1 $library; $kind; $vis $($class $(< $($param : $ty),+ >)?),+);
     };
     // private impl
-    (@ $library:ident; $kind:ident; $vis:vis $ident:ident, $($super:ident),+) => {
-        $crate::extern_class!(@ $library; $kind; $vis $ident);
-
-        $crate::paste::paste! {
-            $(impl [< $super Interface >] for $ident {})+
-        }
+    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $(< $($param:ident : $ty:path),+ >)?, $($super:ident $(< $($super_param:ident : $super_ty:path),+ >)?),+) => {
+        $crate::extern_class!(@1 $library; $kind; $vis $ident $(< $($param : $ty),+ >)?);
+        $crate::extern_class!(@2 $ident; $(< $($param : $ty),+ >)?; $($super),+);
     };
-    (@ $library:ident; $kind:ident; $vis:vis $ident:ident) => {
+    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $(< $($param:ident : $ty:path),+ >)?) => {
         core::arch::global_asm!(
             "    .pushsection __DATA,__objc_classrefs,regular,no_dead_strip",
             "    .p2align 3",
@@ -39,11 +36,15 @@ macro_rules! extern_class {
 
         #[allow(missing_copy_implementations, missing_docs)]
         #[repr(C)]
-        $vis struct $ident (
+        $vis struct $ident $(< $($param : $ty),+ >)? (
             [u8; core::mem::size_of::<usize>()],
+            $($(core::marker::PhantomData<$param>,)+)?
         );
 
-        impl core::fmt::Debug for $ident {
+
+        impl $(< $($param),+ >)? core::fmt::Debug for $ident $(< $($param),+ >)?
+        $(where $($param : $ty),+)?
+        {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 let obj = $crate::Object::as_ptr(self);
                 // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid
@@ -53,7 +54,9 @@ macro_rules! extern_class {
         }
 
         $crate::paste::paste! {
-            impl $crate::Object for $ident {
+            impl $(< $($param),+ >)? $crate::Object for $ident $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {
                 #[inline]
                 fn class_type() -> &'static $crate::objc_class {
                     // SAFETY: Rust code never reads through the reference. The reference is passed
@@ -62,9 +65,27 @@ macro_rules! extern_class {
                 }
             }
 
-            impl $crate::NSObjectProtocol for $ident {}
-            impl [< $ident Interface >] for $ident {}
+            impl $(< $($param),+ >)? $crate::NSObjectProtocol for $ident $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {}
+
+            impl $(< $($param),+ >)? [< $ident Interface >] for $ident $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {
+                $($(type $param = $param;)+)?
+            }
         }
+    };
+    (@2 $ident:ident; $(< $($param:ident : $ty:path),+ >)?; $super:ident) => {
+        $crate::paste::paste! {
+            impl $(< $($param),+ >)? [< $super Interface >] for $ident $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {}
+        }
+    };
+    (@2 $ident:ident; $(< $($param:ident : $ty:path),+ >)?; $super:ident, $($ancestors:ident),+) => {
+        $crate::extern_class!(@2 $ident; $(< $($param : $ty),+ >)?; $super);
+        $crate::extern_class!(@2 $ident; $(< $($param : $ty),+ >)?; $($ancestors),+);
     };
 }
 
