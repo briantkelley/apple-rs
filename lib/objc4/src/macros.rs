@@ -87,13 +87,7 @@ macro_rules! extern_class {
     };
     (@2 $ident:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?; $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
         $crate::extern_class!(@3 $ident, $super $($super_class_interface)? $($($param : $ty),+)?);
-        $crate::paste::paste! {
-            impl $(< $($param),+ >)? [< $super Interface >] for $ident $(< $($param),+ >)?
-            $(where $($param : $ty),+)?
-            {
-                $($(type $super_param = $super_param;)+)?
-            }
-        }
+        $crate::extern_class!(@4 $ident; $super $(< $($super_param),+ >)? $(; $($param : $ty),+)?);
     };
     (@2 $ident:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?; $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?, $($ancestors:ident $($ancestor_class_interface:lifetime)? $(< $($ancestor_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
         $crate::extern_class!(@2 $ident $($class_interface)? $(< $($class_param),+ >)?; $super $($super_class_interface)? $(< $($super_param),+ >)? $(; $($param : $ty),+)?);
@@ -120,6 +114,22 @@ macro_rules! extern_class {
     (@3 $ident:ident, $super:ident 'cls $($($param:ident : $ty:path),+)?) => {
         $crate::paste::paste! {
             impl [< $super ClassInterface >] for [< $ident ClassType >] {}
+        }
+    };
+    (@4 $ident:ident; NSObject $(; $($param:ident : $ty:path),+)?) => {
+        $crate::paste::paste! {
+            impl $(< $($param),+ >)? $crate::NSObjectInterface for $ident $(< $($param),+ >)?
+           $(where $($param : $ty),+)?
+           {}
+       }
+    };
+    (@4 $ident:ident; $super:ident $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
+        $crate::paste::paste! {
+             impl $(< $($param),+ >)? [< $super Interface >] for $ident $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {
+                $($(type $super_param = $super_param;)+)?
+            }
         }
     };
 }
