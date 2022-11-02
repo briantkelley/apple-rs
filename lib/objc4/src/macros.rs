@@ -16,7 +16,7 @@ macro_rules! extern_class {
     (@1 $library:ident; $kind:ident; $vis:vis $class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)? $(, $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?)* $(; $($param:ident : $ty:path),+)?) => {
         // <Class>Class and <Class> type definitions; Debug and Object implementations
         $crate::extern_class!(@2 $library; $kind; $vis $class $(< $($class_param),+ >)? $(; $($param : $ty),+)?);
-        // <Class>ClassInterface and <Class>Interface implementations
+        // <Class>ClassInterface, <Class>Interface, and Upcast<&Class, &Super> implementations
         $crate::extern_class!(@3 $class; $class $($class_interface)? $(< $($class_param),+ >)? $(, $super $($super_class_interface)? $(< $($super_param),+ >)?)* $(; $($param : $ty),+)?);
     };
     (@2 $library:ident; $kind:ident; $vis:vis $class:ident $(< $($class_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
@@ -84,6 +84,8 @@ macro_rules! extern_class {
         $crate::extern_class!(@4 $class, $interface $($interface_class_interface)? $(; $($param : $ty),+)?);
         // <Interface>Interface
         $crate::extern_class!(@5 $class; $interface $(< $($interface_param),+ >)? $(; $($param : $ty),+)?);
+        // Upcast<&Class, &Super>
+        $crate::extern_class!(@6 $class; $($super $(< $($super_param),+ >)?),* $(; $($param : $ty),+)?);
     };
     (@4 $class:ident, $interface:ident $(; $($param:ident : $ty:path),+)?) => {};
     (@4 $class:ident, NSObject 'cls) => {
@@ -125,6 +127,27 @@ macro_rules! extern_class {
             $(where $($param : $ty),+)?
             {
                 $($(type $interface_param = $interface_param;)+)?
+            }
+        }
+    };
+    (@6 $class:ident; $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@7 $class; $crate::objc_object $(; $($param : $ty),+)?);
+    };
+    (@6 $class:ident; NSObject $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@7 $class; $crate::NSObject $(; $($param : $ty),+)?);
+    };
+    (@6 $class:ident; $super:path $(, $_super:path)* $(; $($param:ident : $ty:path),+)?) => {
+        $crate::extern_class!(@7 $class; $super $(; $($param : $ty),+)?);
+    };
+    (@7 $class:ident; $super:path $(; $($param:ident : $ty:path),+)?) => {
+        impl<'a $(, $($param),+ )? > $crate::Upcast< &'a $class $(< $($param),+ >)?, &'a $super > for $class $(< $($param),+ >)?
+        $(where $($param : $ty),+)?
+        {
+            fn upcast(from: &Self) -> & $super {
+                let ptr: *const Self = from;
+                let ptr = ptr.cast();
+                // SAFETY: We trust the class hierarchy specification is correct.
+                unsafe { &*ptr }
             }
         }
     };

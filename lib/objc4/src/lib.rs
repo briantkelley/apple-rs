@@ -121,6 +121,7 @@ mod class;
 mod nsobject;
 mod object;
 mod sys;
+mod upcast;
 
 pub use arc::Arc;
 pub use boxed::Box;
@@ -132,3 +133,4 @@ pub use nsobject::{
 };
 pub use object::Object;
 pub use sys::{id, objc_class, objc_msgSend, objc_object, Class};
+pub use upcast::Upcast;

@@ -80,7 +80,11 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{NSString, NSStringClass, NSStringClassInterface, NSStringInterface};
+    use crate::{
+        NSNumberClass, NSNumberClassInterface, NSString, NSStringClass, NSStringClassInterface,
+        NSStringInterface,
+    };
+    use objc4::{NSObject, NSObjectProtocol};
 
     #[test]
     fn test_add_get_remove() {
@@ -100,5 +104,34 @@ mod test {
 
         dict.remove(&key);
         assert_eq!(dict.len(), 0);
+    }
+
+    #[test]
+    fn test_upcast() {
+        let string = NSStringClass.from_str("string");
+        let number = NSStringClass.from_str("number");
+
+        let mut dict_mut = NSMutableDictionary::<NSString, NSObject>::new();
+
+        dict_mut.set(&string, NSStringClass.from_str("value").upcast());
+        dict_mut.set(&number, NSNumberClass.from_i32(0xf00d).upcast());
+        assert_eq!(dict_mut.len(), 2);
+
+        let dict = dict_mut.upcast::<NSDictionary<NSString, NSObject>>();
+        assert_eq!(dict.len(), 2);
+        assert!(dict
+            .get(&string)
+            .unwrap()
+            .is_equal(&*NSStringClass.from_str("value").upcast::<NSObject>()));
+        assert!(dict
+            .get(&number)
+            .unwrap()
+            .is_equal(&*NSNumberClass.from_i32(0xf00d).upcast::<NSObject>()));
+
+        let object = dict.upcast::<NSObject>();
+        assert!(matches!(
+            object.class_name().to_str().unwrap().find("Dictionary"),
+            Some(_)
+        ));
     }
 }

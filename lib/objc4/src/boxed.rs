@@ -1,5 +1,5 @@
 use crate::sys::{objc_object, objc_release, objc_retain};
-use crate::{id, Object};
+use crate::{id, Object, Upcast};
 use core::borrow::{Borrow, BorrowMut};
 use core::fmt::{self, Debug, Formatter};
 use core::marker::PhantomData;
@@ -72,6 +72,24 @@ where
     pub unsafe fn transmute_unchecked<U>(self) -> Box<U>
     where
         U: Object,
+    {
+        let new = Box::<U> {
+            obj: self.obj,
+            phantom: PhantomData,
+        };
+        forget(self);
+        new
+    }
+
+    /// Safely upcasts the contents of the box from `T` to `U`.
+    ///
+    /// This is necessary because Rust does not support type inheritance and Objective-C objects
+    /// cannot generally be represented as fat pointers.
+    #[must_use]
+    pub fn upcast<'a, U>(self) -> Box<U>
+    where
+        T: Object + Upcast<&'a T, &'a U> + 'a,
+        U: Object + 'a,
     {
         let new = Box::<U> {
             obj: self.obj,
