@@ -127,7 +127,7 @@ pub use boxed::Box;
 pub use class::*;
 pub use macros::paste;
 pub use nsobject::{
-    NSObject, NSObjectClass, NSObjectClassInterface, NSObjectInterface, NSObjectMetaClass,
+    NSObject, NSObjectClass, NSObjectClassInterface, NSObjectClassType, NSObjectInterface,
     NSObjectProtocol,
 };
 pub use object::Object;
