@@ -4,61 +4,61 @@ pub use paste;
 /// all the given class hierarchy traits.
 #[macro_export]
 macro_rules! extern_class {
-    // -kind
+    // without link kind
     ($library:ident, $vis:vis $($class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
         $crate::extern_class!(@1 $library; framework; $vis $($class $($class_interface)? $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
-    // +kind
+    // with link kind
     ($library:ident, kind = $kind:ident, $vis:vis $($class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
         $crate::extern_class!(@1 $library; $kind; $vis $($class $($class_interface)? $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
     };
     // private impl
-    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?, $($super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@1 $library; $kind; $vis $ident $($class_interface)? $(< $($class_param),+ >)? $(; $($param : $ty),+)?);
-        $crate::extern_class!(@2 $ident $($class_interface)? $(< $($class_param),+ >)?; $($super $($super_class_interface)? $(< $($super_param),+ >)?),+ $(; $($param : $ty),+)?);
+    (@1 $library:ident; $kind:ident; $vis:vis $class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)? $(, $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?)* $(; $($param:ident : $ty:path),+)?) => {
+        // <Class>Class and <Class> type definitions; Debug and Object implementations
+        $crate::extern_class!(@2 $library; $kind; $vis $class $(< $($class_param),+ >)? $(; $($param : $ty),+)?);
+        // <Class>ClassInterface and <Class>Interface implementations
+        $crate::extern_class!(@3 $class; $class $($class_interface)? $(< $($class_param),+ >)? $(, $super $($super_class_interface)? $(< $($super_param),+ >)?)* $(; $($param : $ty),+)?);
     };
-    (@1 $library:ident; $kind:ident; $vis:vis $ident:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
+    (@2 $library:ident; $kind:ident; $vis:vis $class:ident $(< $($class_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
         core::arch::global_asm!(
             "    .pushsection __DATA,__objc_classrefs,regular,no_dead_strip",
             "    .p2align 3",
-            concat!("_", stringify!($ident), "ClassReference:"),
-            concat!("    .quad    _OBJC_CLASS_$_", stringify!($ident)),
+            concat!("_", stringify!($class), "ClassReference:"),
+            concat!("    .quad    _OBJC_CLASS_$_", stringify!($class)),
             "    .popsection",
         );
 
         $crate::paste::paste! {
             #[link(name = "" $library, kind = "" $kind)]
             extern "C" {
-                #[link_name = "OBJC_CLASS_$_" $ident]
-                static [< _ $ident Class >]: [< $ident ClassType >];
+                #[link_name = "OBJC_CLASS_$_" $class]
+                static [< _ $class Class >]: [< $class ClassType >];
             }
 
             #[allow(missing_docs, non_upper_case_globals)]
-            $vis static [< $ident Class >]: &[< $ident ClassType >] = unsafe { &[< _ $ident Class >] };
+            $vis static [< $class Class >]: &[< $class ClassType >] = unsafe { &[< _ $class Class >] };
 
             #[allow(missing_copy_implementations, missing_docs)]
             #[repr(transparent)]
-            $vis struct [< $ident ClassType >] (
+            $vis struct [< $class ClassType >] (
                 $crate::objc_class,
             );
 
-            impl core::fmt::Debug for [< $ident ClassType >] {
+            impl core::fmt::Debug for [< $class ClassType >] {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                     self.0.fmt(f)
                 }
             }
         }
 
-        $crate::extern_class!(@3 $ident, $ident $($class_interface)?);
-
         #[allow(missing_copy_implementations, missing_docs)]
         #[repr(C)]
-        $vis struct $ident $(< $($param : $ty),+ >)? (
+        $vis struct $class $(< $($param : $ty),+ >)? (
             [u8; core::mem::size_of::<usize>()],
             $($(core::marker::PhantomData<$param>,)+)?
         );
 
-        impl $(< $($param),+ >)? core::fmt::Debug for $ident $(< $($param),+ >)?
+        impl $(< $($param),+ >)? core::fmt::Debug for $class $(< $($param),+ >)?
         $(where $($param : $ty),+)?
         {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -70,40 +70,32 @@ macro_rules! extern_class {
         }
 
         $crate::paste::paste! {
-            impl $(< $($param),+ >)? $crate::Object for $ident $(< $($param),+ >)?
+            impl $(< $($param),+ >)? $crate::Object for $class $(< $($param),+ >)?
             $(where $($param : $ty),+)?
             {}
+        }
+    };
+    (@3 $class:ident; $(; $($param:ident : $ty:path),+)?) => {};
+    (@3 $class:ident; $interface:ident $($interface_class_interface:lifetime)? $(< $($interface_param:ident),+ >)? $(, $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?)* $(; $($param:ident : $ty:path),+)?) => {
+        // Expand from root to derived so `cargo expand` shows root to derived.
+        $crate::extern_class!(@3 $class; $($super $($super_class_interface)? $(< $($super_param),+ >)?),* $(; $($param : $ty),+)?);
 
-            impl $(< $($param),+ >)? $crate::NSObjectProtocol for $ident $(< $($param),+ >)?
-            $(where $($param : $ty),+)?
-            {}
-
-            impl $(< $($param),+ >)? [< $ident Interface >] for $ident $(< $($param),+ >)?
-            $(where $($param : $ty),+)?
-            {
-                $($(type $class_param = $class_param;)+)?
+        // <Interface>ClassInterface
+        $crate::extern_class!(@4 $class, $interface $($interface_class_interface)? $(; $($param : $ty),+)?);
+        // <Interface>Interface
+        $crate::extern_class!(@5 $class; $interface $(< $($interface_param),+ >)? $(; $($param : $ty),+)?);
+    };
+    (@4 $class:ident, $interface:ident $(; $($param:ident : $ty:path),+)?) => {};
+    (@4 $class:ident, NSObject 'cls) => {
+        $crate::paste::paste! {
+            impl $crate::NSObjectClassInterface for [< $class ClassType >] {
+                type Instance = $class;
             }
         }
     };
-    (@2 $ident:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?; $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@3 $ident, $super $($super_class_interface)? $($($param : $ty),+)?);
-        $crate::extern_class!(@4 $ident; $super $(< $($super_param),+ >)? $(; $($param : $ty),+)?);
-    };
-    (@2 $ident:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?; $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?, $($ancestors:ident $($ancestor_class_interface:lifetime)? $(< $($ancestor_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@2 $ident $($class_interface)? $(< $($class_param),+ >)?; $super $($super_class_interface)? $(< $($super_param),+ >)? $(; $($param : $ty),+)?);
-        $crate::extern_class!(@2 $ident $($class_interface)? $(< $($class_param),+ >)?; $($ancestors $($ancestor_class_interface)? $(< $($ancestor_param),+ >)?),+ $(; $($param : $ty),+)?);
-    };
-    (@3 $ident:ident, $super:ident $($($param:ident : $ty:path),+)?) => {};
-    (@3 $ident:ident, NSObject 'cls) => {
+    (@4 $class:ident, NSObject 'cls; $($param:ident : $ty:path),+) => {
         $crate::paste::paste! {
-            impl $crate::NSObjectClassInterface for [< $ident ClassType >] {
-                type Instance = $ident;
-            }
-        }
-    };
-    (@3 $ident:ident, NSObject 'cls $($param:ident : $ty:path),+) => {
-        $crate::paste::paste! {
-            impl $crate::NSObjectClassInterface for [< $ident ClassType >] {
+            impl $crate::NSObjectClassInterface for [< $class ClassType >] {
                 // Use `id` for types with generic parameters. Otherwise, the class type would
                 // require generic parameters to specify the generic types on the associated type,
                 // which creates *n* class types where only 1 exists.
@@ -111,24 +103,28 @@ macro_rules! extern_class {
             }
         }
     };
-    (@3 $ident:ident, $super:ident 'cls $($($param:ident : $ty:path),+)?) => {
+    (@4 $class:ident, $interface:ident 'cls $(; $($param:ident : $ty:path),+)?) => {
         $crate::paste::paste! {
-            impl [< $super ClassInterface >] for [< $ident ClassType >] {}
+            impl [< $interface ClassInterface >] for [< $class ClassType >] {}
         }
     };
-    (@4 $ident:ident; NSObject $(; $($param:ident : $ty:path),+)?) => {
+    (@5 $class:ident; NSObject $(; $($param:ident : $ty:path),+)?) => {
         $crate::paste::paste! {
-            impl $(< $($param),+ >)? $crate::NSObjectInterface for $ident $(< $($param),+ >)?
-           $(where $($param : $ty),+)?
-           {}
+            impl $(< $($param),+ >)? $crate::NSObjectProtocol for $class $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {}
+
+            impl $(< $($param),+ >)? $crate::NSObjectInterface for $class $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {}
        }
     };
-    (@4 $ident:ident; $super:ident $(< $($super_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
+    (@5 $class:ident; $interface:ident $(< $($interface_param:ident),+ >)? $(; $($param:ident : $ty:path),+)?) => {
         $crate::paste::paste! {
-             impl $(< $($param),+ >)? [< $super Interface >] for $ident $(< $($param),+ >)?
+            impl $(< $($param),+ >)? [< $interface Interface >] for $class $(< $($param),+ >)?
             $(where $($param : $ty),+)?
             {
-                $($(type $super_param = $super_param;)+)?
+                $($(type $interface_param = $interface_param;)+)?
             }
         }
     };
