@@ -1,7 +1,11 @@
 use crate::NSCopying;
 use core::ffi::{c_char, CStr};
+use core::hash::{Hash, Hasher};
 use core::ptr::NonNull;
-use objc4::{extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface};
+use objc4::{
+    extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface,
+    NSObjectProtocol,
+};
 
 /// The following constants are provided by `NSString` as possible string encodings.
 #[derive(Clone, Copy, Debug)]
@@ -101,6 +105,12 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
     }
 }
 
+impl Hash for NSString {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_usize(NSObjectProtocol::hash(self));
+    }
+}
+
 impl NSCopying for NSString {
     type Result = Self;
 }
@@ -145,7 +155,7 @@ mod tests {
         let data = unsafe { &HELLO_WORLD };
         let heap = NSStringClass.from_str("Hello, World!");
 
-        assert_eq!(data.hash(), heap.hash());
+        assert_eq!(NSObjectProtocol::hash(data), NSObjectProtocol::hash(&*heap));
 
         assert!(data.is_equal(&*heap));
         assert!(heap.is_equal(data));

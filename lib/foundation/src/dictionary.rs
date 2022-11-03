@@ -1,6 +1,8 @@
 use crate::NSCopying;
+use core::hash::{Hash, Hasher};
 use objc4::{
-    extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface, Object,
+    extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface,
+    NSObjectProtocol, Object,
 };
 
 extern_class!(Foundation, pub NSDictionary<Key, Value>, NSObject 'cls; Key: NSCopying, Value: Object; -PartialEq);
@@ -39,6 +41,16 @@ pub trait NSDictionaryInterface:
         other: &impl NSDictionaryInterface<Key = Self::Key, Value = Self::Value>,
     ) -> bool {
         msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTODICTIONARY_], other.as_ptr())
+    }
+}
+
+impl<Key, Value> Hash for NSDictionary<Key, Value>
+where
+    Key: NSCopying,
+    Value: Object,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_usize(NSObjectProtocol::hash(self));
     }
 }
 
@@ -93,6 +105,16 @@ where
     pub fn new() -> Box<Self> {
         let obj = NSMutableDictionaryClass.new();
         unsafe { obj.transmute_unchecked::<Self>() }
+    }
+}
+
+impl<Key, Value> Hash for NSMutableDictionary<Key, Value>
+where
+    Key: NSCopying,
+    Value: Object,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_usize(NSObjectProtocol::hash(self));
     }
 }
 

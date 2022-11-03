@@ -1,11 +1,21 @@
 use crate::NSCopying;
+use core::hash::{Hash, Hasher};
 use core::ptr::NonNull;
-use objc4::{extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface};
+use objc4::{
+    extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface,
+    NSObjectProtocol,
+};
 
 extern_class!(Foundation, pub NSValue, NSObject 'cls);
 
 /// A simple container for a single C or Objective-C data item.
 pub trait NSValueInterface: NSObjectInterface + NSCopying<Result = Self> {}
+
+impl Hash for NSValue {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_usize(NSObjectProtocol::hash(self));
+    }
+}
 
 impl NSCopying for NSValue {
     type Result = Self;
@@ -296,6 +306,12 @@ pub trait NSNumberInterface: NSValueInterface {
     #[inline]
     fn is_equal_to_number(&self, other: &impl NSNumberInterface) -> bool {
         msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTONUMBER_], other.as_ptr())
+    }
+}
+
+impl Hash for NSNumber {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_usize(NSObjectProtocol::hash(self));
     }
 }
 

@@ -1,8 +1,9 @@
+use core::hash::Hash;
 use core::ptr::NonNull;
 use objc4::{id, msg_send, sel, Box, Object};
 
 /// A protocol that objects adopt to provide functional copies of themselves.
-pub trait NSCopying: Object {
+pub trait NSCopying: Eq + Hash + Object {
     /// The object type returned by the copy.
     type Result: Object;
 
