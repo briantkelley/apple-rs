@@ -1,25 +1,19 @@
 [package]
-authors = [
-    "Brian T. Kelley <brian@briantkelley.com>",
-]
-categories = [
-    "api-bindings",
-    "no-std",
-    "os::macos-apis",
-]
+authors.workspace = true
+categories.workspace = true
 description = "Idiomatic Rust bindings for Apple's Foundation framework."
-edition = "2021"
+edition.workspace = true
 keywords = [
     "apple",
     "foundation",
     "objc",
     "objective-c",
 ]
-license = "Apache-2.0"
+license.workspace = true
 name = "objc4_foundation"
-repository = "https://github.com/briantkelley/rust-objc4"
-rust-version = "1.64"
-version = "0.0.1"
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
 
 [dependencies]
 objc4 = { path = "../objc4" }

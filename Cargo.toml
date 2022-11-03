@@ -4,6 +4,21 @@ members = [
     "lib/objc4",
 ]
 
+[workspace.package]
+authors = [
+     "Brian T. Kelley <brian@briantkelley.com>",
+]
+categories = [
+    "api-bindings",
+    "no-std",
+    "os::macos-apis",
+]
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/briantkelley/rust-objc4"
+rust-version = "1.64"
+version = "0.0.1"
+
 [profile.bench]
 overflow-checks = true
 
