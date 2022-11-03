@@ -3,11 +3,13 @@ use objc4::{
     extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface, Object,
 };
 
-extern_class!(Foundation, pub NSDictionary<Key, Value>, NSObject 'cls; Key: NSCopying, Value: Object);
+extern_class!(Foundation, pub NSDictionary<Key, Value>, NSObject 'cls; Key: NSCopying, Value: Object; -PartialEq);
 
 /// A static collection of objects associated with unique keys.
 #[allow(clippy::len_without_is_empty)]
-pub trait NSDictionaryInterface: NSObjectInterface + NSCopying {
+pub trait NSDictionaryInterface:
+    NSObjectInterface + NSCopying<Result = NSDictionary<Self::Key, Self::Value>>
+{
     /// The object type that identifies values in the dictionary.
     type Key: NSCopying;
 
@@ -28,9 +30,17 @@ pub trait NSDictionaryInterface: NSObjectInterface + NSCopying {
     fn len(&self) -> usize {
         msg_send!(usize)(self.as_ptr(), sel![COUNT])
     }
-}
 
-extern_class!(Foundation, pub NSMutableDictionary, NSDictionary<Key, Value>, NSObject 'cls; Key: NSCopying, Value: Object);
+    /// Returns a Boolean value that indicates whether the contents of the receiving dictionary are
+    /// equal to the contents of another given dictionary.
+    #[inline]
+    fn is_equal_to_dictionary(
+        &self,
+        other: &impl NSDictionaryInterface<Key = Self::Key, Value = Self::Value>,
+    ) -> bool {
+        msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTODICTIONARY_], other.as_ptr())
+    }
+}
 
 impl<Key, Value> NSCopying for NSDictionary<Key, Value>
 where
@@ -39,6 +49,19 @@ where
 {
     type Result = Self;
 }
+
+impl<T, Key, Value> PartialEq<T> for NSDictionary<Key, Value>
+where
+    Key: NSCopying,
+    Value: Object,
+    T: NSDictionaryInterface<Key = Key, Value = Value>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.is_equal_to_dictionary(other)
+    }
+}
+
+extern_class!(Foundation, pub NSMutableDictionary, NSDictionary<Key, Value>, NSObject 'cls; Key: NSCopying, Value: Object; -PartialEq);
 
 /// A dynamic collection of objects associated with unique keys.
 pub trait NSMutableDictionaryInterface: NSDictionaryInterface {
@@ -60,14 +83,6 @@ pub trait NSMutableDictionaryInterface: NSDictionaryInterface {
     }
 }
 
-impl<Key, Value> NSCopying for NSMutableDictionary<Key, Value>
-where
-    Key: NSCopying,
-    Value: Object,
-{
-    type Result = NSDictionary<Key, Value>;
-}
-
 impl<Key, Value> NSMutableDictionary<Key, Value>
 where
     Key: NSCopying,
@@ -78,6 +93,25 @@ where
     pub fn new() -> Box<Self> {
         let obj = NSMutableDictionaryClass.new();
         unsafe { obj.transmute_unchecked::<Self>() }
+    }
+}
+
+impl<Key, Value> NSCopying for NSMutableDictionary<Key, Value>
+where
+    Key: NSCopying,
+    Value: Object,
+{
+    type Result = NSDictionary<Key, Value>;
+}
+
+impl<T, Key, Value> PartialEq<T> for NSMutableDictionary<Key, Value>
+where
+    Key: NSCopying,
+    Value: Object,
+    T: NSDictionaryInterface<Key = Key, Value = Value>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.is_equal_to_dictionary(other)
     }
 }
 
@@ -108,6 +142,21 @@ mod test {
 
         dict.remove(&key);
         assert_eq!(dict.len(), 0);
+    }
+
+    #[test]
+    fn test_equal() {
+        let string = NSStringClass.from_str("string");
+        let number = NSStringClass.from_str("number");
+
+        let mut dict1 = NSMutableDictionary::<NSString, NSObject>::new();
+        dict1.set(&string, NSStringClass.from_str("value").upcast());
+        dict1.set(&number, NSNumberClass.from_i32(0xf00d).upcast());
+
+        let dict2 = dict1.copy();
+
+        assert_eq!(dict1, dict2);
+        assert_eq!(dict2, dict1);
     }
 
     #[test]

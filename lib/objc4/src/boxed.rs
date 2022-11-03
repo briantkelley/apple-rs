@@ -171,3 +171,25 @@ where
         unsafe { objc_release(obj) }
     }
 }
+
+impl<T> Eq for Box<T> where T: Eq + Object {}
+
+impl<T, U> PartialEq<Box<U>> for Box<T>
+where
+    T: Object + PartialEq<U>,
+    U: Object,
+{
+    fn eq(&self, other: &Box<U>) -> bool {
+        **self == **other
+    }
+}
+
+impl<T, U> PartialEq<U> for Box<T>
+where
+    T: Object + PartialEq<U>,
+    U: Object,
+{
+    fn eq(&self, other: &U) -> bool {
+        &**self == other
+    }
+}

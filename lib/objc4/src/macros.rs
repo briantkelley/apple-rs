@@ -5,17 +5,19 @@ pub use paste;
 #[macro_export]
 macro_rules! extern_class {
     // without link kind
-    ($library:ident, $vis:vis $($class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@1 $library; framework; $vis $($class $($class_interface)? $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
+    ($library:ident, $vis:vis $($class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)? $(; $(-$skip:ident),+)?) => {
+        $crate::extern_class!(@1 $library; framework; $vis $($class $($class_interface)? $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)? $(; $(-$skip),+)?);
     };
     // with link kind
-    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)?) => {
-        $crate::extern_class!(@1 $library; $kind; $vis $($class $($class_interface)? $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)?);
+    ($library:ident, kind = $kind:ident, $vis:vis $($class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)?),+ $(; $($param:ident : $ty:path),+)? $(; $(-$skip:ident),+)?) => {
+        $crate::extern_class!(@1 $library; $kind; $vis $($class $($class_interface)? $(< $($class_param),+ >)?),+ $(; $($param : $ty),+)? $(; $(-$skip),+)?);
     };
     // private impl
-    (@1 $library:ident; $kind:ident; $vis:vis $class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)? $(, $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?)* $(; $($param:ident : $ty:path),+)?) => {
+    (@1 $library:ident; $kind:ident; $vis:vis $class:ident $($class_interface:lifetime)? $(< $($class_param:ident),+ >)? $(, $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?)* $(; $($param:ident : $ty:path),+)? $(; $(-$skip:ident),+)?) => {
         // <Class>Class and <Class> type definitions; Debug and Object implementations
         $crate::extern_class!(@2 $library; $kind; $vis $class $(< $($class_param),+ >)? $(; $($param : $ty),+)?);
+        // PartialEq trait
+        $crate::extern_class!(@8 $class $(; $($param : $ty),+)? $(; $(-$skip),+)?);
         // <Class>ClassInterface, <Class>Interface, and Upcast<&Class, &Super> implementations
         $crate::extern_class!(@3 $class; $class $($class_interface)? $(< $($class_param),+ >)? $(, $super $($super_class_interface)? $(< $($super_param),+ >)?)* $(; $($param : $ty),+)?);
     };
@@ -112,6 +114,26 @@ macro_rules! extern_class {
     };
     (@5 $class:ident; NSObject $(; $($param:ident : $ty:path),+)?) => {
         $crate::paste::paste! {
+            impl $(< $($param),+ >)? Eq for $class $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {}
+
+            impl $(< $($param),+ >)? PartialEq<$crate::Box<Self>> for $class $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {
+                fn eq(&self, other: & $crate::Box<Self>) -> bool {
+                    self == core::ops::Deref::deref(other)
+                }
+            }
+
+            impl $(< $($param),+ >)? PartialEq<$crate::objc_object> for $class $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {
+                fn eq(&self, other: & $crate::objc_object) -> bool {
+                    $crate::NSObjectProtocol::is_equal(self, other)
+                }
+            }
+
             impl $(< $($param),+ >)? $crate::NSObjectProtocol for $class $(< $($param),+ >)?
             $(where $($param : $ty),+)?
             {}
@@ -150,6 +172,22 @@ macro_rules! extern_class {
                 unsafe { &*ptr }
             }
         }
+    };
+    (@8 $class:ident $(; $($param:ident : $ty:path),+)?) => {
+        // The macro invocation does not contain -PartialEq so implement the default.
+        $crate::paste::paste! {
+            impl< T $(, $($param),+)? > PartialEq<T> for $class $(< $($param),+ >)?
+            where
+                T: [< $class Interface >]
+                $($(, $param : $ty)+)?
+            {
+                fn eq(&self, other: &T) -> bool {
+                    $crate::NSObjectProtocol::is_equal(self, other)
+                }
+            }
+        }
+    };
+    (@8 $class:ident $(; $($param:ident : $ty:path),+)?; -PartialEq) => {
     };
 }
 

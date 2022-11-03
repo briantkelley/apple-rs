@@ -32,7 +32,7 @@ pub enum NSStringEncoding {
     UTF32LittleEndian = 0x9c00_0100,
 }
 
-extern_class!(Foundation, pub NSString 'cls, NSObject 'cls);
+extern_class!(Foundation, pub NSString 'cls, NSObject 'cls; -PartialEq);
 
 /// A static, plain-text Unicode string object.
 pub trait NSStringClassInterface: NSObjectClassInterface {
@@ -69,7 +69,7 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
 
 /// A static, plain-text Unicode string object.
 #[allow(clippy::len_without_is_empty)]
-pub trait NSStringInterface: NSObjectInterface + NSCopying {
+pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
     /// The number of UTF-16 code units in the receiver.
     #[inline]
     fn len(&self) -> usize {
@@ -79,7 +79,7 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying {
     /// Returns a boolean value that indicates whether a given string is equal to the receiver using
     /// a literal Unicode-based comparison.
     #[inline]
-    fn is_equal_to_string(&self, other: &dyn NSStringInterface<Result = NSString>) -> bool {
+    fn is_equal_to_string(&self, other: &impl NSStringInterface) -> bool {
         msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTOSTRING_], other.as_ptr())
     }
 
@@ -103,6 +103,15 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying {
 
 impl NSCopying for NSString {
     type Result = Self;
+}
+
+impl<T> PartialEq<T> for NSString
+where
+    T: NSStringInterface,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.is_equal_to_string(other)
+    }
 }
 
 #[cfg(test)]
@@ -137,7 +146,12 @@ mod tests {
         let heap = NSStringClass.from_str("Hello, World!");
 
         assert_eq!(data.hash(), heap.hash());
+
         assert!(data.is_equal(&*heap));
+        assert!(heap.is_equal(data));
+
+        assert_eq!(*data, heap);
+        assert_eq!(heap, *data);
     }
 
     #[test]

@@ -15,6 +15,8 @@ macro_rules! all_selectors {
         selector!(INITWITHBYTES_LENGTH_ENCODING_ = "initWithBytes:length:encoding:");
         selector!(INTEGERVALUE = "integerValue");
         selector!(INTVALUE = "intValue");
+        selector!(ISEQUALTODICTIONARY_ = "isEqualToDictionary:");
+        selector!(ISEQUALTONUMBER_ = "isEqualToNumber:");
         selector!(ISEQUALTOSTRING_ = "isEqualToString:");
         selector!(LENGTH = "length");
         selector!(LONGLONGVALUE = "longLongValue");

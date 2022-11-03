@@ -5,10 +5,10 @@ use core::ptr::NonNull;
 extern_class!(objc, kind = dylib, pub NSObject 'cls);
 
 /// The group of methods that are fundamental to all Objective-C objects.
-pub trait NSObjectProtocol: Object {
+pub trait NSObjectProtocol: Eq + Object + PartialEq<objc_object> {
     /// Returns a Boolean value that indicates whether the receiver and a given object are equal.
     #[inline]
-    fn is_equal(&self, object: &dyn Object) -> bool {
+    fn is_equal(&self, object: &impl Object) -> bool {
         msg_send!(bool, id)(self.as_ptr(), sel![IS_EQUAL_], object.as_ptr())
     }
 
@@ -115,9 +115,13 @@ mod tests {
 
         assert!(a.is_equal(&*a));
         assert!(b.is_equal(&*b));
+        assert_eq!(a, a);
+        assert_eq!(b, b);
 
         assert!(!a.is_equal(&*b));
         assert!(!b.is_equal(&*a));
+        assert_ne!(a, b);
+        assert_ne!(b, a);
     }
 
     #[test]

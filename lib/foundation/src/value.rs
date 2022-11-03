@@ -5,13 +5,13 @@ use objc4::{extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObje
 extern_class!(Foundation, pub NSValue, NSObject 'cls);
 
 /// A simple container for a single C or Objective-C data item.
-pub trait NSValueInterface: NSObjectInterface + NSCopying {}
+pub trait NSValueInterface: NSObjectInterface + NSCopying<Result = Self> {}
 
 impl NSCopying for NSValue {
     type Result = Self;
 }
 
-extern_class!(Foundation, pub NSNumber 'cls, NSValue, NSObject 'cls);
+extern_class!(Foundation, pub NSNumber 'cls, NSValue, NSObject 'cls; -PartialEq);
 
 /// An object wrapper for primitive scalar numeric values.
 pub trait NSNumberClassInterface: NSObjectClassInterface {
@@ -290,10 +290,26 @@ pub trait NSNumberInterface: NSValueInterface {
     fn as_usize(&self) -> usize {
         msg_send!(usize)(self.as_ptr(), sel![UNSIGNEDINTEGERVALUE])
     }
+
+    /// Returns a Boolean value that indicates whether the number object’s value and a given number
+    /// are equal.
+    #[inline]
+    fn is_equal_to_number(&self, other: &impl NSNumberInterface) -> bool {
+        msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTONUMBER_], other.as_ptr())
+    }
 }
 
 impl NSCopying for NSNumber {
     type Result = Self;
+}
+
+impl<T> PartialEq<T> for NSNumber
+where
+    T: NSNumberInterface,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.is_equal_to_number(other)
+    }
 }
 
 #[cfg(test)]
@@ -324,7 +340,7 @@ mod tests {
                 NSNumberClass.from_usize(usize::from(value.2)),
             ];
 
-            for number in numbers {
+            for number in &numbers {
                 assert_eq!(number.as_i8(), value.1);
                 assert_eq!(number.as_u8(), value.2);
                 assert_eq!(number.as_i16(), i16::from(value.1));
@@ -341,6 +357,10 @@ mod tests {
                 assert_eq!(number.as_bool(), value.0);
                 assert_eq!(number.as_isize(), isize::from(value.1));
                 assert_eq!(number.as_usize(), usize::from(value.2));
+
+                for number2 in &numbers {
+                    assert_eq!(number, number2);
+                }
             }
         }
     }
