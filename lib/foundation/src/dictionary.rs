@@ -141,28 +141,28 @@ where
 mod test {
     use super::*;
     use crate::{
-        NSNumberClass, NSNumberClassInterface, NSString, NSStringClass, NSStringClassInterface,
-        NSStringInterface,
+        string_literal, NSNumberClass, NSNumberClassInterface, NSString, NSStringClass,
+        NSStringClassInterface, NSStringInterface,
     };
-    use objc4::{NSObject, NSObjectProtocol};
+    use objc4::NSObject;
 
     #[test]
     fn test_add_get_remove() {
+        string_literal!(static KEY: NSString = "key");
+        string_literal!(static VALUE: NSString = "value");
+
         let mut dict = NSMutableDictionary::<NSString, NSString>::new();
 
-        let key = NSStringClass.from_str("key");
-        let value = NSStringClass.from_str("value");
-
-        dict.set(&key, value);
+        dict.set(KEY, VALUE.copy());
         assert_eq!(dict.len(), 1);
 
-        let value = dict.get(&key).unwrap();
+        let value = dict.get(KEY).unwrap();
         assert_eq!(
             unsafe { value.as_c_str() }.unwrap().to_str().unwrap(),
             "value"
         );
 
-        dict.remove(&key);
+        dict.remove(KEY);
         assert_eq!(dict.len(), 0);
     }
 

@@ -8,14 +8,21 @@ Idiomatic Rust bindings for Apple's Foundation framework.
 The crate includes support for creating and using instances of:
 
 * `NSDictionary` and `NSMutableDictionary`
+* `NSNumber`
 * `NSString` (including compile-time constants)
 
-```compile_fail
+```
+# use objc4_foundation::*;
+# mod sel {
+#    use objc4::selector;
+#    objc4::all_selectors!();
+#    objc4_foundation::all_selectors!();
+# }
 string_literal!(static LOCATION: NSString = "location"); // compile-time constant
-let location = NSString::from_str("Bellevue");           // heap allocated
+let location = NSStringClass.from_str("Bellevue");       // heap allocated
 
 let mut dict = NSMutableDictionary::<NSString, NSString>::new();
-dict.set(&LOCATION, location);
+dict.set(LOCATION, location);
 assert_eq!(dict.len(), 1);
 ```
 */
@@ -73,6 +80,7 @@ pub use dictionary::{
 pub use object::NSCopying;
 pub use string::{
     NSString, NSStringClass, NSStringClassInterface, NSStringEncoding, NSStringInterface,
+    __CFConstantString, __CFConstantStringClassReference,
 };
 pub use value::{
     NSNumber, NSNumberClass, NSNumberClassInterface, NSNumberInterface, NSValue, NSValueClass,
