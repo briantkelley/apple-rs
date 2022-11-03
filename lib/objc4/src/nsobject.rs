@@ -53,6 +53,7 @@ pub trait NSObjectClassInterface {
     /// The Swift API notes for this method specify the return type is non-null. Typically the
     /// Objective-C runtime will trap if allocation fails. However, if a subclass overrides this
     /// method and returns `nil`, this binding method will panic.
+    #[inline]
     #[must_use]
     fn alloc(&self) -> NonNull<objc_object> {
         let cls: *const _ = self;
@@ -73,6 +74,7 @@ pub trait NSObjectClassInterface {
     /// Objective-C runtime will trap if allocation fails. However, if a subclass overrides `+alloc`
     /// or `-init` and returns `nil`, this binding method will panic.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn new(&self) -> Box<Self::Instance> {
         let cls: *const _ = self;

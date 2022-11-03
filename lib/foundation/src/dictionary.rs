@@ -15,6 +15,7 @@ pub trait NSDictionaryInterface: NSObjectInterface + NSCopying {
     type Value: Object;
 
     /// Returns the value associated with a given key.
+    #[inline]
     fn get(&self, k: &Self::Key) -> Option<&Self::Value> {
         let obj =
             msg_send!(id, id)(self.as_ptr(), sel![OBJECTFORKEY_], k.as_ptr()) as *const Self::Value;
@@ -23,6 +24,7 @@ pub trait NSDictionaryInterface: NSObjectInterface + NSCopying {
     }
 
     /// The number of entries in the dictionary.
+    #[inline]
     fn len(&self) -> usize {
         msg_send!(usize)(self.as_ptr(), sel![COUNT])
     }
@@ -41,11 +43,13 @@ where
 /// A dynamic collection of objects associated with unique keys.
 pub trait NSMutableDictionaryInterface: NSDictionaryInterface {
     /// Removes a given key and its associated value from the dictionary.
+    #[inline]
     fn remove(&mut self, k: &Self::Key) {
         msg_send!((), id)(self.as_ptr(), sel![REMOVEOBJECTFORKEY_], k.as_ptr());
     }
 
     /// Adds a given key-value pair to the dictionary.
+    #[inline]
     fn set(&mut self, k: &Self::Key, v: Box<Self::Value>) {
         msg_send!((), id, id)(
             self.as_ptr(),

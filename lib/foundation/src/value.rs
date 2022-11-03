@@ -17,6 +17,7 @@ extern_class!(Foundation, pub NSNumber 'cls, NSValue, NSObject 'cls);
 pub trait NSNumberClassInterface: NSObjectClassInterface {
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `i8`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_i8(&self, value: i8) -> Box<Self::Instance> {
         Box::with_retained(
@@ -31,6 +32,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u8`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_u8(&self, value: u8) -> Box<Self::Instance> {
         Box::with_retained(
@@ -45,6 +47,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `i16`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_i16(&self, value: i16) -> Box<Self::Instance> {
         Box::with_retained(
@@ -59,6 +62,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u16`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_u16(&self, value: u16) -> Box<Self::Instance> {
         Box::with_retained(
@@ -73,6 +77,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `i32`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_i32(&self, value: i32) -> Box<Self::Instance> {
         Box::with_retained(
@@ -87,6 +92,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u32`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_u32(&self, value: u32) -> Box<Self::Instance> {
         Box::with_retained(
@@ -101,6 +107,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `i64`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_i64(&self, value: i64) -> Box<Self::Instance> {
         Box::with_retained(
@@ -115,6 +122,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u64`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_u64(&self, value: u64) -> Box<Self::Instance> {
         Box::with_retained(
@@ -129,6 +137,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `f32`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_f32(&self, value: f32) -> Box<Self::Instance> {
         Box::with_retained(
@@ -143,6 +152,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `f64`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_f64(&self, value: f64) -> Box<Self::Instance> {
         Box::with_retained(
@@ -157,6 +167,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `bool`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_bool(&self, value: bool) -> Box<Self::Instance> {
         Box::with_retained(
@@ -171,6 +182,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `isize`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_isize(&self, value: isize) -> Box<Self::Instance> {
         Box::with_retained(
@@ -185,6 +197,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `usize`.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_usize(&self, value: usize) -> Box<Self::Instance> {
         Box::with_retained(
@@ -201,66 +214,79 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
 /// An object wrapper for primitive scalar numeric values.
 pub trait NSNumberInterface: NSValueInterface {
     /// The number object's value expressed as a `i8`.
+    #[inline]
     fn as_i8(&self) -> i8 {
         msg_send!(i8)(self.as_ptr(), sel![CHARVALUE])
     }
 
     /// The number object's value expressed as a `u8`.
+    #[inline]
     fn as_u8(&self) -> u8 {
         msg_send!(u8)(self.as_ptr(), sel![UNSIGNEDCHARVALUE])
     }
 
     /// The number object's value expressed as a `i16`.
+    #[inline]
     fn as_i16(&self) -> i16 {
         msg_send!(i16)(self.as_ptr(), sel![SHORTVALUE])
     }
 
     /// The number object's value expressed as a `u16`.
+    #[inline]
     fn as_u16(&self) -> u16 {
         msg_send!(u16)(self.as_ptr(), sel![UNSIGNEDSHORTVALUE])
     }
 
     /// The number object's value expressed as a `i32`.
+    #[inline]
     fn as_i32(&self) -> i32 {
         msg_send!(i32)(self.as_ptr(), sel![INTVALUE])
     }
 
     /// The number object's value expressed as a `u32`.
+    #[inline]
     fn as_u32(&self) -> u32 {
         msg_send!(u32)(self.as_ptr(), sel![UNSIGNEDINTVALUE])
     }
 
     /// The number object's value expressed as a `i64`.
+    #[inline]
     fn as_i64(&self) -> i64 {
         msg_send!(i64)(self.as_ptr(), sel![LONGLONGVALUE])
     }
 
     /// The number object's value expressed as a `u64`.
+    #[inline]
     fn as_u64(&self) -> u64 {
         msg_send!(u64)(self.as_ptr(), sel![UNSIGNEDLONGLONGVALUE])
     }
 
     /// The number object's value expressed as a `f32`.
+    #[inline]
     fn as_f32(&self) -> f32 {
         msg_send!(f32)(self.as_ptr(), sel![FLOATVALUE])
     }
 
     /// The number object's value expressed as a `f64`.
+    #[inline]
     fn as_f64(&self) -> f64 {
         msg_send!(f64)(self.as_ptr(), sel![DOUBLEVALUE])
     }
 
     /// The number object's value expressed as a `bool`.
+    #[inline]
     fn as_bool(&self) -> bool {
         msg_send!(bool)(self.as_ptr(), sel![BOOLVALUE])
     }
 
     /// The number object's value expressed as a `isize`.
+    #[inline]
     fn as_isize(&self) -> isize {
         msg_send!(isize)(self.as_ptr(), sel![INTEGERVALUE])
     }
 
     /// The number object's value expressed as a `usize`.
+    #[inline]
     fn as_usize(&self) -> usize {
         msg_send!(usize)(self.as_ptr(), sel![UNSIGNEDINTEGERVALUE])
     }

@@ -39,6 +39,7 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
     /// Returns an `NSString` object containing a given number of bytes from a given buffer of bytes
     /// interpreted in a given encoding.
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     #[must_use]
     fn from_bytes(&self, buf: &[u8], encoding: NSStringEncoding) -> Option<Box<Self::Instance>> {
         let obj = msg_send!(id, *const u8, usize, usize)(
@@ -70,12 +71,14 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
 #[allow(clippy::len_without_is_empty)]
 pub trait NSStringInterface: NSObjectInterface + NSCopying {
     /// The number of UTF-16 code units in the receiver.
+    #[inline]
     fn len(&self) -> usize {
         msg_send!(usize)(self.as_ptr(), sel![LENGTH])
     }
 
     /// Returns a boolean value that indicates whether a given string is equal to the receiver using
     /// a literal Unicode-based comparison.
+    #[inline]
     fn is_equal_to_string(&self, other: &dyn NSStringInterface<Result = NSString>) -> bool {
         msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTOSTRING_], other.as_ptr())
     }
@@ -86,6 +89,7 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying {
     ///
     /// This method is unsafe because the returned reference is only valid through the current
     /// autorelease scope, which is not well-defined.
+    #[inline]
     unsafe fn as_c_str(&self) -> Option<&CStr> {
         let str = msg_send!(*const c_char)(self.as_ptr(), sel![UTF8STRING]);
         if str.is_null() {
