@@ -237,6 +237,7 @@ macro_rules! __msg_send_helper {
                 "    .long    0",
                 "    .popsection",
             );
+            #[allow(invalid_value)]
             objc_msgSend($self, core::mem::MaybeUninit::uninit().assume_init() $($(, $arg)?)+)
         }
     };

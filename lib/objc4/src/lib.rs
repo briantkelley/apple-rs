@@ -88,7 +88,6 @@ selector, and calls `objc_msgSend` with the given arguments and emitted selector
     pointer_structural_match,
     rustdoc::invalid_html_tags,
     rustdoc::missing_crate_level_docs,
-    rustdoc::missing_doc_code_examples,
     rustdoc::private_doc_tests,
     single_use_lifetimes,
     trivial_casts,
@@ -117,7 +116,6 @@ mod upcast;
 
 pub use arc::Arc;
 pub use boxed::Box;
-pub use class::*;
 pub use macros::paste;
 pub use nsobject::{
     NSObject, NSObjectClass, NSObjectClassInterface, NSObjectClassType, NSObjectInterface,

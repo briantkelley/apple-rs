@@ -42,7 +42,6 @@ assert_eq!(dict.len(), 1);
     pointer_structural_match,
     rustdoc::invalid_html_tags,
     rustdoc::missing_crate_level_docs,
-    rustdoc::missing_doc_code_examples,
     rustdoc::private_doc_tests,
     single_use_lifetimes,
     trivial_casts,
