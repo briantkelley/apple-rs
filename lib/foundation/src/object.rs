@@ -1,6 +1,6 @@
 use core::hash::Hash;
 use core::ptr::NonNull;
-use objc4::{id, msg_send, sel, Box, Object};
+use objc4::{id, msg_send, Box, Object};
 
 /// A protocol that objects adopt to provide functional copies of themselves.
 pub trait NSCopying: Eq + Hash + Object {
@@ -16,7 +16,7 @@ pub trait NSCopying: Eq + Hash + Object {
     /// method and returns `nil`, this binding method will panic.
     #[inline]
     fn copy(&self) -> Box<Self::Result> {
-        let obj = msg_send!(id)(self.as_ptr(), sel![COPY]);
+        let obj = msg_send!((id)[self.as_ptr(), copy]);
         // SAFETY: Objects retured by selectors beginning with ‘copy’ must be released.
         NonNull::new(obj)
             .map(|obj| unsafe { Box::with_transfer(obj) })

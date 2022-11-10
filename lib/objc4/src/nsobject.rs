@@ -9,19 +9,19 @@ pub trait NSObjectProtocol: Eq + Object + PartialEq<objc_object> {
     /// Returns a Boolean value that indicates whether the receiver and a given object are equal.
     #[inline]
     fn is_equal(&self, object: &impl Object) -> bool {
-        msg_send!(bool, id)(self.as_ptr(), sel![IS_EQUAL_], object.as_ptr())
+        msg_send!((bool)[self.as_ptr(), isEqual:(id)object.as_ptr()])
     }
 
     /// Returns an integer that can be used as a table address in a hash table structure.
     #[inline]
     fn hash(&self) -> usize {
-        msg_send!(usize)(self.as_ptr(), sel![HASH])
+        msg_send!((usize)[self.as_ptr(), hash])
     }
 
     /// Returns the class object for the receiver’s superclass
     #[inline]
     fn superclass(&self) -> Option<NonNull<objc_class>> {
-        let cls = msg_send!(*mut objc_class)(self.as_ptr(), sel![SUPERCLASS]);
+        let cls = msg_send!((*mut objc_class)[self.as_ptr(), superclass]);
         NonNull::new(cls)
     }
 
@@ -29,7 +29,7 @@ pub trait NSObjectProtocol: Eq + Object + PartialEq<objc_object> {
     /// [`NSObjectInterface`].
     #[inline]
     fn is_proxy(&self) -> bool {
-        msg_send!(bool)(self.as_ptr(), sel![IS_PROXY])
+        msg_send!((bool)[self.as_ptr(), isProxy])
     }
 }
 

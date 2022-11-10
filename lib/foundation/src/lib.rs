@@ -13,11 +13,6 @@ The crate includes support for creating and using instances of:
 
 ```
 # use objc4_foundation::*;
-# mod sel {
-#    use objc4::selector;
-#    objc4::all_selectors!();
-#    objc4_foundation::all_selectors!();
-# }
 string_literal!(static LOCATION: NSString = "location"); // compile-time constant
 let location = NSStringClass.from_str("Bellevue");       // heap allocated
 
@@ -65,8 +60,6 @@ assert_eq!(dict.len(), 1);
 
 #[macro_use]
 mod macros;
-#[macro_use]
-pub mod sel;
 
 mod dictionary;
 mod object;

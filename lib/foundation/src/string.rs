@@ -4,7 +4,7 @@ use core::fmt::{self, Debug, Formatter};
 use core::hash::{Hash, Hasher};
 use core::ptr::NonNull;
 use objc4::{
-    extern_class, id, msg_send, objc_object, sel, Box, NSObjectClassInterface, NSObjectInterface,
+    extern_class, id, msg_send, objc_object, Box, NSObjectClassInterface, NSObjectInterface,
     NSObjectProtocol, Object,
 };
 
@@ -47,13 +47,9 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_bytes(&self, buf: &[u8], encoding: NSStringEncoding) -> Option<Box<Self::Instance>> {
-        let obj = msg_send!(id, *const u8, usize, usize)(
-            self.alloc().as_ptr(),
-            sel![INITWITHBYTES_LENGTH_ENCODING_],
-            buf.as_ptr(),
-            buf.len(),
-            encoding as usize,
-        );
+        let obj = msg_send!((id)[self.alloc().as_ptr(), initWithBytes:(*const u8)buf.as_ptr()
+                                                                                 length:(usize)buf.len()
+                                                                               encoding:(usize)encoding as usize]);
         // SAFETY: Objects retured by selectors beginning with ‘alloc’ must be released.
         NonNull::new(obj).map(|obj| unsafe { Box::with_transfer(obj) })
     }
@@ -78,14 +74,14 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
     /// The number of UTF-16 code units in the receiver.
     #[inline]
     fn len(&self) -> usize {
-        msg_send!(usize)(self.as_ptr(), sel![LENGTH])
+        msg_send!((usize)[self.as_ptr(), length])
     }
 
     /// Returns a boolean value that indicates whether a given string is equal to the receiver using
     /// a literal Unicode-based comparison.
     #[inline]
     fn is_equal_to_string(&self, other: &impl NSStringInterface) -> bool {
-        msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTOSTRING_], other.as_ptr())
+        msg_send!((bool)[self.as_ptr(), isEqualToString:(id)other.as_ptr()])
     }
 
     /// A null-terminated UTF-8 representation of the string.
@@ -96,7 +92,7 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
     /// autorelease scope, which is not well-defined.
     #[inline]
     unsafe fn as_c_str(&self) -> Option<&CStr> {
-        let str = msg_send!(*const c_char)(self.as_ptr(), sel![UTF8STRING]);
+        let str = msg_send!((*const c_char)[self.as_ptr(), UTF8String]);
         if str.is_null() {
             None
         } else {

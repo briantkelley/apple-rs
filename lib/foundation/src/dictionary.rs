@@ -1,8 +1,8 @@
 use crate::NSCopying;
 use core::hash::{Hash, Hasher};
 use objc4::{
-    extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface,
-    NSObjectProtocol, Object,
+    extern_class, id, msg_send, Box, NSObjectClassInterface, NSObjectInterface, NSObjectProtocol,
+    Object,
 };
 
 extern_class!(Foundation, pub NSDictionary<Key, Value>, NSObject 'cls; Key: NSCopying, Value: Object; -PartialEq);
@@ -21,8 +21,7 @@ pub trait NSDictionaryInterface:
     /// Returns the value associated with a given key.
     #[inline]
     fn get(&self, k: &Self::Key) -> Option<&Self::Value> {
-        let obj =
-            msg_send!(id, id)(self.as_ptr(), sel![OBJECTFORKEY_], k.as_ptr()) as *const Self::Value;
+        let obj = msg_send!((*const Self::Value)[self.as_ptr(), objectForKey:(id)k.as_ptr()]);
         // SAFETY: If the dictionary contains the value, the pointer is guaranteed to be valid.
         unsafe { obj.as_ref() }
     }
@@ -30,7 +29,7 @@ pub trait NSDictionaryInterface:
     /// The number of entries in the dictionary.
     #[inline]
     fn len(&self) -> usize {
-        msg_send!(usize)(self.as_ptr(), sel![COUNT])
+        msg_send!((usize)[self.as_ptr(), count])
     }
 
     /// Returns a Boolean value that indicates whether the contents of the receiving dictionary are
@@ -40,7 +39,7 @@ pub trait NSDictionaryInterface:
         &self,
         other: &impl NSDictionaryInterface<Key = Self::Key, Value = Self::Value>,
     ) -> bool {
-        msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTODICTIONARY_], other.as_ptr())
+        msg_send!((bool)[self.as_ptr(), isEqualToDictionary:(id)other.as_ptr()])
     }
 }
 
@@ -80,18 +79,13 @@ pub trait NSMutableDictionaryInterface: NSDictionaryInterface {
     /// Removes a given key and its associated value from the dictionary.
     #[inline]
     fn remove(&mut self, k: &Self::Key) {
-        msg_send!((), id)(self.as_ptr(), sel![REMOVEOBJECTFORKEY_], k.as_ptr());
+        msg_send!([self.as_ptr(), removeObjectForKey:(id)k.as_ptr()])
     }
 
     /// Adds a given key-value pair to the dictionary.
     #[inline]
     fn set(&mut self, k: &Self::Key, v: Box<Self::Value>) {
-        msg_send!((), id, id)(
-            self.as_ptr(),
-            sel![SETOBJECT_FORKEY_],
-            v.as_ptr(),
-            k.as_ptr(),
-        );
+        msg_send!([self.as_ptr(), setObject:(id)v.as_ptr() forKey:(id)k.as_ptr()]);
     }
 }
 

@@ -2,8 +2,7 @@ use crate::NSCopying;
 use core::hash::{Hash, Hasher};
 use core::ptr::NonNull;
 use objc4::{
-    extern_class, id, msg_send, sel, Box, NSObjectClassInterface, NSObjectInterface,
-    NSObjectProtocol,
+    extern_class, id, msg_send, Box, NSObjectClassInterface, NSObjectInterface, NSObjectProtocol,
 };
 
 extern_class!(Foundation, pub NSValue, NSObject 'cls);
@@ -31,12 +30,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_i8(&self, value: i8) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, i8)(
-                self.as_ptr(),
-                sel![NUMBERWITHCHAR_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithChar:(i8)value])).unwrap(),
         )
     }
 
@@ -46,12 +40,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_u8(&self, value: u8) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, u8)(
-                self.as_ptr(),
-                sel![NUMBERWITHUNSIGNEDCHAR_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedChar:(u8)value])).unwrap(),
         )
     }
 
@@ -61,12 +50,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_i16(&self, value: i16) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, i16)(
-                self.as_ptr(),
-                sel![NUMBERWITHSHORT_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithShort:(i16)value])).unwrap(),
         )
     }
 
@@ -76,12 +60,8 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_u16(&self, value: u16) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, u16)(
-                self.as_ptr(),
-                sel![NUMBERWITHUNSIGNEDSHORT_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedShort:(u16)value]))
+                .unwrap(),
         )
     }
 
@@ -91,12 +71,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_i32(&self, value: i32) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, i32)(
-                self.as_ptr(),
-                sel![NUMBERWITHINT_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithInt:(i32)value])).unwrap(),
         )
     }
 
@@ -106,12 +81,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_u32(&self, value: u32) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, u32)(
-                self.as_ptr(),
-                sel![NUMBERWITHUNSIGNEDINT_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedInt:(u32)value])).unwrap(),
         )
     }
 
@@ -121,12 +91,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_i64(&self, value: i64) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, i64)(
-                self.as_ptr(),
-                sel![NUMBERWITHLONGLONG_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithLongLong:(i64)value])).unwrap(),
         )
     }
 
@@ -136,12 +101,8 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_u64(&self, value: u64) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, u64)(
-                self.as_ptr(),
-                sel![NUMBERWITHUNSIGNEDLONGLONG_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedLongLong:(u64)value]))
+                .unwrap(),
         )
     }
 
@@ -151,12 +112,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_f32(&self, value: f32) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, f32)(
-                self.as_ptr(),
-                sel![NUMBERWITHFLOAT_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithFloat:(f32)value])).unwrap(),
         )
     }
 
@@ -166,12 +122,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_f64(&self, value: f64) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, f64)(
-                self.as_ptr(),
-                sel![NUMBERWITHDOUBLE_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithDouble:(f64)value])).unwrap(),
         )
     }
 
@@ -181,12 +132,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_bool(&self, value: bool) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, u8)(
-                self.as_ptr(),
-                sel![NUMBERWITHBOOL_],
-                u8::from(value),
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithBool:(bool)value])).unwrap(),
         )
     }
 
@@ -196,12 +142,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_isize(&self, value: isize) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, isize)(
-                self.as_ptr(),
-                sel![NUMBERWITHINTEGER_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithInteger:(isize)value])).unwrap(),
         )
     }
 
@@ -211,12 +152,8 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_usize(&self, value: usize) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!(id, usize)(
-                self.as_ptr(),
-                sel![NUMBERWITHUNSIGNEDINTEGER_],
-                value,
-            ))
-            .unwrap(),
+            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedInteger:(usize)value]))
+                .unwrap(),
         )
     }
 }
@@ -226,86 +163,86 @@ pub trait NSNumberInterface: NSValueInterface {
     /// The number object's value expressed as a `i8`.
     #[inline]
     fn as_i8(&self) -> i8 {
-        msg_send!(i8)(self.as_ptr(), sel![CHARVALUE])
+        msg_send!((i8)[self.as_ptr(), charValue])
     }
 
     /// The number object's value expressed as a `u8`.
     #[inline]
     fn as_u8(&self) -> u8 {
-        msg_send!(u8)(self.as_ptr(), sel![UNSIGNEDCHARVALUE])
+        msg_send!((u8)[self.as_ptr(), unsignedCharValue])
     }
 
     /// The number object's value expressed as a `i16`.
     #[inline]
     fn as_i16(&self) -> i16 {
-        msg_send!(i16)(self.as_ptr(), sel![SHORTVALUE])
+        msg_send!((i16)[self.as_ptr(), shortValue])
     }
 
     /// The number object's value expressed as a `u16`.
     #[inline]
     fn as_u16(&self) -> u16 {
-        msg_send!(u16)(self.as_ptr(), sel![UNSIGNEDSHORTVALUE])
+        msg_send!((u16)[self.as_ptr(), unsignedShortValue])
     }
 
     /// The number object's value expressed as a `i32`.
     #[inline]
     fn as_i32(&self) -> i32 {
-        msg_send!(i32)(self.as_ptr(), sel![INTVALUE])
+        msg_send!((i32)[self.as_ptr(), intValue])
     }
 
     /// The number object's value expressed as a `u32`.
     #[inline]
     fn as_u32(&self) -> u32 {
-        msg_send!(u32)(self.as_ptr(), sel![UNSIGNEDINTVALUE])
+        msg_send!((u32)[self.as_ptr(), unsignedIntValue])
     }
 
     /// The number object's value expressed as a `i64`.
     #[inline]
     fn as_i64(&self) -> i64 {
-        msg_send!(i64)(self.as_ptr(), sel![LONGLONGVALUE])
+        msg_send!((i64)[self.as_ptr(), longLongValue])
     }
 
     /// The number object's value expressed as a `u64`.
     #[inline]
     fn as_u64(&self) -> u64 {
-        msg_send!(u64)(self.as_ptr(), sel![UNSIGNEDLONGLONGVALUE])
+        msg_send!((u64)[self.as_ptr(), unsignedLongLongValue])
     }
 
     /// The number object's value expressed as a `f32`.
     #[inline]
     fn as_f32(&self) -> f32 {
-        msg_send!(f32)(self.as_ptr(), sel![FLOATVALUE])
+        msg_send!((f32)[self.as_ptr(), floatValue])
     }
 
     /// The number object's value expressed as a `f64`.
     #[inline]
     fn as_f64(&self) -> f64 {
-        msg_send!(f64)(self.as_ptr(), sel![DOUBLEVALUE])
+        msg_send!((f64)[self.as_ptr(), doubleValue])
     }
 
     /// The number object's value expressed as a `bool`.
     #[inline]
     fn as_bool(&self) -> bool {
-        msg_send!(bool)(self.as_ptr(), sel![BOOLVALUE])
+        msg_send!((bool)[self.as_ptr(), boolValue])
     }
 
     /// The number object's value expressed as a `isize`.
     #[inline]
     fn as_isize(&self) -> isize {
-        msg_send!(isize)(self.as_ptr(), sel![INTEGERVALUE])
+        msg_send!((isize)[self.as_ptr(), integerValue])
     }
 
     /// The number object's value expressed as a `usize`.
     #[inline]
     fn as_usize(&self) -> usize {
-        msg_send!(usize)(self.as_ptr(), sel![UNSIGNEDINTEGERVALUE])
+        msg_send!((usize)[self.as_ptr(), unsignedIntegerValue])
     }
 
     /// Returns a Boolean value that indicates whether the number object’s value and a given number
     /// are equal.
     #[inline]
     fn is_equal_to_number(&self, other: &impl NSNumberInterface) -> bool {
-        msg_send!(bool, id)(self.as_ptr(), sel![ISEQUALTONUMBER_], other.as_ptr())
+        msg_send!((bool)[self.as_ptr(), isEqualToNumber:(id)other.as_ptr()])
     }
 }
 

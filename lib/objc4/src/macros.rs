@@ -191,55 +191,55 @@ macro_rules! extern_class {
     };
 }
 
-/// A macro to type cast `objc_msgSend` with the correct return type and argument types so the
-/// compiler can pass the arguments as required by the ABI.
+/// A macro to call `objc_msgSend` with the correct return type and argument types so the compiler
+/// can pass the arguments as required by the ABI.
 #[macro_export]
 macro_rules! msg_send {
-    ($ret:ty $(, $ty:ty)*) => {
+    ([$self:expr, $cmd:ident]) => {
+        $crate::msg_send!(@1 (), $self, $cmd)
+    };
+    ([$self:expr, $($cmd:ident : ($ty:ty) $arg:expr)+]) => {
+        $crate::msg_send!(@1 (), $self, $($cmd, $ty, $arg)+)
+    };
+    (($ret:ty)[$self:expr, $cmd:ident]) => {
+        $crate::msg_send!(@1 $ret, $self, $cmd)
+    };
+    (($ret:ty)[$self:expr, $($cmd:ident : ($ty:ty) $arg:expr)+]) => {
+        $crate::msg_send!(@1 $ret, $self, $($cmd, $ty, $arg)+)
+    };
+    (@1 $ret:ty, $self:expr, $($cmd:ident $(, $ty:ty, $arg:expr)?)+) => {
         // SAFETY: Assume the user of the macro provided the correct return type, receiver type,
         // selector instance, and argument types.
         unsafe {
+            let cmd: *const u8;
+            core::arch::asm!(
+                "    .pushsection __TEXT,__objc_methname,cstring_literals",
+                "2:",
+                concat!("    .asciz   \"", $crate::msg_send!(@2 $($cmd $(, $ty)?),+), "\""),
+                "",
+                "    .section     __DATA,__objc_selrefs,literal_pointers,no_dead_strip",
+                "    .p2align 3",
+                "3:",
+                "    .quad    2b",
+                "    .popsection",
+                "adrp	{y}, 3b@PAGE",
+                "ldr	{x}, [{y}, 3b@PAGEOFF]",
+                y = out(reg) _,
+                x = out(reg) cmd,
+                options(nomem, nostack, pure),
+            );
             let untyped: unsafe extern "C" fn() = $crate::objc_msgSend;
-            core::mem::transmute::<
+            let typed = core::mem::transmute::<
                 _,
-                extern "C" fn($crate::id, *const u8 $(, $ty)*) -> $ret,
-            >(untyped)
+                unsafe extern "C" fn($crate::id, *const u8 $($(, $ty)?)+) -> $ret,
+            >(untyped);
+            typed($self, cmd $($(, $arg)?)+)
         }
     };
-}
-
-/// A convenience macro to wrap the read of a selector symbol in an `unsafe` block.
-#[allow(clippy::crate_in_macro_def)]
-#[macro_export]
-macro_rules! sel {
-    [$cmd:ident] => {
-        // SAFETY: Rust code never reads through the reference. The reference is passed to the
-        // Objective-C runtime, which is the owner of the data type.
-        unsafe { crate::sel::$cmd }
-    }
-}
-
-/// Create a symbol for a selector. Requires providing the literal spelling as used by the runtime.
-#[macro_export]
-macro_rules! selector {
-    ($ident:ident = $name:literal) => {
-        core::arch::global_asm!(
-            "    .pushsection __TEXT,__objc_methname,cstring_literals",
-            concat!("l_SELECTOR_NAME_", stringify!($ident), ":"),
-            concat!("    .asciz   \"", $name, "\""),
-            "",
-            "    .section     __DATA,__objc_selrefs,literal_pointers,no_dead_strip",
-            "    .p2align 3",
-            concat!("_SELECTOR_", stringify!($ident), ":"),
-            concat!("    .quad    l_SELECTOR_NAME_", stringify!($ident)),
-            "    .popsection",
-        );
-
-        extern "C" {
-            $crate::paste::paste! {
-                #[link_name = "SELECTOR_" $ident]
-                pub(super) static $ident: *const u8;
-            }
-        }
+    (@2 $cmd:ident) => {
+        stringify!($cmd)
+    };
+    (@2 $($cmd:ident, $ty:ty),+) => {
+        concat!($(stringify!($cmd), ":"),+)
     };
 }
