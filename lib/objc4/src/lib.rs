@@ -126,11 +126,3 @@ pub use nsobject::{
 pub use object::Object;
 pub use sys::{id, objc_class, objc_msgSend, objc_object, Class};
 pub use upcast::Upcast;
-
-core::arch::global_asm!(
-    "    .pushsection __DATA,__objc_imageinfo,regular,no_dead_strip",
-    "L_OBJC_IMAGE_INFO:",
-    "    .long    0",
-    "    .long    0",
-    "    .popsection",
-);

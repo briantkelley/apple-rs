@@ -213,7 +213,10 @@ macro_rules! msg_send {
         unsafe {
             let cmd: *const u8;
             core::arch::asm!(
-                "    .pushsection __TEXT,__objc_methname,cstring_literals",
+                "    .pushsection __DATA,__objc_imageinfo,regular,no_dead_strip",
+                "    .long    0",
+                "    .long    0",
+                "    .section __TEXT,__objc_methname,cstring_literals",
                 "2:",
                 concat!("    .asciz   \"", $crate::msg_send!(@2 $($cmd $(, $ty)?),+), "\""),
                 "",
