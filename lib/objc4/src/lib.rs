@@ -124,5 +124,5 @@ pub use nsobject::{
     NSObjectProtocol,
 };
 pub use object::Object;
-pub use sys::{id, objc_class, objc_msgSend, objc_object, Class};
+pub use sys::{id, objc_class, objc_object, Class};
 pub use upcast::Upcast;

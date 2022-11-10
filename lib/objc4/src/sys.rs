@@ -53,16 +53,6 @@ extern "C" {
 }
 
 //
-// $ISYSROOT/objc/message.h
-//
-
-#[link(name = "objc")]
-extern "C" {
-    /// Sends a message with a simple return value to an instance of a class.
-    pub fn objc_msgSend();
-}
-
-//
 // $OBJC4/runtime/objc-internal.h
 //
 

@@ -21,7 +21,7 @@ pub trait NSDictionaryInterface:
     /// Returns the value associated with a given key.
     #[inline]
     fn get(&self, k: &Self::Key) -> Option<&Self::Value> {
-        let obj = msg_send!((*const Self::Value)[self.as_ptr(), objectForKey:(id)k.as_ptr()]);
+        let obj = msg_send!((id)[self.as_ptr(), objectForKey:(id)k.as_ptr()]).cast::<Self::Value>();
         // SAFETY: If the dictionary contains the value, the pointer is guaranteed to be valid.
         unsafe { obj.as_ref() }
     }
@@ -79,7 +79,7 @@ pub trait NSMutableDictionaryInterface: NSDictionaryInterface {
     /// Removes a given key and its associated value from the dictionary.
     #[inline]
     fn remove(&mut self, k: &Self::Key) {
-        msg_send!([self.as_ptr(), removeObjectForKey:(id)k.as_ptr()])
+        msg_send!([self.as_ptr(), removeObjectForKey:(id)k.as_ptr()]);
     }
 
     /// Adds a given key-value pair to the dictionary.

@@ -208,9 +208,54 @@ macro_rules! msg_send {
         $crate::msg_send!(@1 $ret, $self, $($cmd, $ty, $arg)+)
     };
     (@1 $ret:ty, $self:expr, $($cmd:ident $(, $ty:ty, $arg:expr)?)+) => {
+        $crate::__msg_send_helper!(@ $ret, $self, $($cmd $(, $ty, $arg)?)+)
+    };
+    (@2 $cmd:ident) => {
+        stringify!($cmd)
+    };
+    (@2 $($cmd:ident, $ty:ty),+) => {
+        concat!($(stringify!($cmd), ":"),+)
+    };
+}
+
+#[cfg(target_arch = "aarch64")]
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __msg_send_helper {
+    (@ $ret:ty, $self:expr, $($cmd:ident $(, $ty:ty, $arg:expr)?)+) => {
         // SAFETY: Assume the user of the macro provided the correct return type, receiver type,
         // selector instance, and argument types.
         unsafe {
+            extern "C" {
+                #[allow(clashing_extern_declarations)]
+                #[link_name = concat!("objc_msgSend$", $crate::msg_send!(@2 $($cmd $(, $ty)?),+))]
+                fn objc_msgSend(receiver: $crate::id, _cmd: *const u8 $($(, $cmd: $ty)?)+) -> $ret;
+            }
+            core::arch::asm!(
+                "    .pushsection __DATA,__objc_imageinfo,regular,no_dead_strip",
+                "    .long    0",
+                "    .long    0",
+                "    .popsection",
+            );
+            objc_msgSend($self, core::mem::MaybeUninit::uninit().assume_init() $($(, $arg)?)+)
+        }
+    };
+}
+
+#[cfg(target_arch = "x86_64")]
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __msg_send_helper {
+    (@ $ret:ty, $self:expr, $($cmd:ident $(, $ty:ty, $arg:expr)?)+) => {
+        // SAFETY: Assume the user of the macro provided the correct return type, receiver type,
+        // selector instance, and argument types.
+        unsafe {
+            #[link(name = "objc")]
+            extern "C" {
+                /// Sends a message with a simple return value to an instance of a class.
+                #[allow(clashing_extern_declarations)]
+                fn objc_msgSend();
+            }
             let cmd: *const u8;
             core::arch::asm!(
                 "    .pushsection __DATA,__objc_imageinfo,regular,no_dead_strip",
@@ -225,24 +270,16 @@ macro_rules! msg_send {
                 "3:",
                 "    .quad    2b",
                 "    .popsection",
-                "adrp	{y}, 3b@PAGE",
-                "ldr	{x}, [{y}, 3b@PAGEOFF]",
-                y = out(reg) _,
+                "mov    {x}, [rip + 3b]",
                 x = out(reg) cmd,
                 options(nomem, nostack, pure),
             );
-            let untyped: unsafe extern "C" fn() = $crate::objc_msgSend;
+            let untyped: unsafe extern "C" fn() = objc_msgSend;
             let typed = core::mem::transmute::<
                 _,
                 unsafe extern "C" fn($crate::id, *const u8 $($(, $ty)?)+) -> $ret,
             >(untyped);
             typed($self, cmd $($(, $arg)?)+)
         }
-    };
-    (@2 $cmd:ident) => {
-        stringify!($cmd)
-    };
-    (@2 $($cmd:ident, $ty:ty),+) => {
-        concat!($(stringify!($cmd), ":"),+)
     };
 }
