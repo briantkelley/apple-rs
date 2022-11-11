@@ -29,9 +29,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_i8(&self, value: i8) -> Box<Self::Instance> {
-        Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithChar:(i8)value])).unwrap(),
-        )
+        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithChar:(i8)value])).unwrap())
     }
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u8`.
@@ -40,7 +38,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_u8(&self, value: u8) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedChar:(u8)value])).unwrap(),
+            NonNull::new(msg_send!((id)[self, numberWithUnsignedChar:(u8)value])).unwrap(),
         )
     }
 
@@ -49,9 +47,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_i16(&self, value: i16) -> Box<Self::Instance> {
-        Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithShort:(i16)value])).unwrap(),
-        )
+        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithShort:(i16)value])).unwrap())
     }
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u16`.
@@ -60,8 +56,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_u16(&self, value: u16) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedShort:(u16)value]))
-                .unwrap(),
+            NonNull::new(msg_send!((id)[self, numberWithUnsignedShort:(u16)value])).unwrap(),
         )
     }
 
@@ -70,9 +65,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_i32(&self, value: i32) -> Box<Self::Instance> {
-        Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithInt:(i32)value])).unwrap(),
-        )
+        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithInt:(i32)value])).unwrap())
     }
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u32`.
@@ -81,7 +74,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_u32(&self, value: u32) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedInt:(u32)value])).unwrap(),
+            NonNull::new(msg_send!((id)[self, numberWithUnsignedInt:(u32)value])).unwrap(),
         )
     }
 
@@ -91,7 +84,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_i64(&self, value: i64) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithLongLong:(i64)value])).unwrap(),
+            NonNull::new(msg_send!((id)[self, numberWithLongLong:(i64)value])).unwrap(),
         )
     }
 
@@ -101,8 +94,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_u64(&self, value: u64) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedLongLong:(u64)value]))
-                .unwrap(),
+            NonNull::new(msg_send!((id)[self, numberWithUnsignedLongLong:(u64)value])).unwrap(),
         )
     }
 
@@ -111,9 +103,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_f32(&self, value: f32) -> Box<Self::Instance> {
-        Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithFloat:(f32)value])).unwrap(),
-        )
+        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithFloat:(f32)value])).unwrap())
     }
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `f64`.
@@ -122,7 +112,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_f64(&self, value: f64) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithDouble:(f64)value])).unwrap(),
+            NonNull::new(msg_send!((id)[self, numberWithDouble:(f64)value])).unwrap(),
         )
     }
 
@@ -131,9 +121,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_bool(&self, value: bool) -> Box<Self::Instance> {
-        Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithBool:(bool)value])).unwrap(),
-        )
+        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithBool:(bool)value])).unwrap())
     }
 
     /// Creates and returns an `NSNumber` object containing a given value, treating it as a `isize`.
@@ -142,7 +130,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_isize(&self, value: isize) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithInteger:(isize)value])).unwrap(),
+            NonNull::new(msg_send!((id)[self, numberWithInteger:(isize)value])).unwrap(),
         )
     }
 
@@ -152,8 +140,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_usize(&self, value: usize) -> Box<Self::Instance> {
         Box::with_retained(
-            NonNull::new(msg_send!((id)[self.as_ptr(), numberWithUnsignedInteger:(usize)value]))
-                .unwrap(),
+            NonNull::new(msg_send!((id)[self, numberWithUnsignedInteger:(usize)value])).unwrap(),
         )
     }
 }
@@ -163,86 +150,86 @@ pub trait NSNumberInterface: NSValueInterface {
     /// The number object's value expressed as a `i8`.
     #[inline]
     fn as_i8(&self) -> i8 {
-        msg_send!((i8)[self.as_ptr(), charValue])
+        msg_send!((i8)[self, charValue])
     }
 
     /// The number object's value expressed as a `u8`.
     #[inline]
     fn as_u8(&self) -> u8 {
-        msg_send!((u8)[self.as_ptr(), unsignedCharValue])
+        msg_send!((u8)[self, unsignedCharValue])
     }
 
     /// The number object's value expressed as a `i16`.
     #[inline]
     fn as_i16(&self) -> i16 {
-        msg_send!((i16)[self.as_ptr(), shortValue])
+        msg_send!((i16)[self, shortValue])
     }
 
     /// The number object's value expressed as a `u16`.
     #[inline]
     fn as_u16(&self) -> u16 {
-        msg_send!((u16)[self.as_ptr(), unsignedShortValue])
+        msg_send!((u16)[self, unsignedShortValue])
     }
 
     /// The number object's value expressed as a `i32`.
     #[inline]
     fn as_i32(&self) -> i32 {
-        msg_send!((i32)[self.as_ptr(), intValue])
+        msg_send!((i32)[self, intValue])
     }
 
     /// The number object's value expressed as a `u32`.
     #[inline]
     fn as_u32(&self) -> u32 {
-        msg_send!((u32)[self.as_ptr(), unsignedIntValue])
+        msg_send!((u32)[self, unsignedIntValue])
     }
 
     /// The number object's value expressed as a `i64`.
     #[inline]
     fn as_i64(&self) -> i64 {
-        msg_send!((i64)[self.as_ptr(), longLongValue])
+        msg_send!((i64)[self, longLongValue])
     }
 
     /// The number object's value expressed as a `u64`.
     #[inline]
     fn as_u64(&self) -> u64 {
-        msg_send!((u64)[self.as_ptr(), unsignedLongLongValue])
+        msg_send!((u64)[self, unsignedLongLongValue])
     }
 
     /// The number object's value expressed as a `f32`.
     #[inline]
     fn as_f32(&self) -> f32 {
-        msg_send!((f32)[self.as_ptr(), floatValue])
+        msg_send!((f32)[self, floatValue])
     }
 
     /// The number object's value expressed as a `f64`.
     #[inline]
     fn as_f64(&self) -> f64 {
-        msg_send!((f64)[self.as_ptr(), doubleValue])
+        msg_send!((f64)[self, doubleValue])
     }
 
     /// The number object's value expressed as a `bool`.
     #[inline]
     fn as_bool(&self) -> bool {
-        msg_send!((bool)[self.as_ptr(), boolValue])
+        msg_send!((bool)[self, boolValue])
     }
 
     /// The number object's value expressed as a `isize`.
     #[inline]
     fn as_isize(&self) -> isize {
-        msg_send!((isize)[self.as_ptr(), integerValue])
+        msg_send!((isize)[self, integerValue])
     }
 
     /// The number object's value expressed as a `usize`.
     #[inline]
     fn as_usize(&self) -> usize {
-        msg_send!((usize)[self.as_ptr(), unsignedIntegerValue])
+        msg_send!((usize)[self, unsignedIntegerValue])
     }
 
     /// Returns a Boolean value that indicates whether the number object’s value and a given number
     /// are equal.
     #[inline]
     fn is_equal_to_number(&self, other: &impl NSNumberInterface) -> bool {
-        msg_send!((bool)[self.as_ptr(), isEqualToNumber:(id)other.as_ptr()])
+        msg_send!((bool)[self, isEqualToNumber:(id)other])
     }
 }
 

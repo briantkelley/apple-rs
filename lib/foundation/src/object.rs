@@ -16,7 +16,7 @@ pub trait NSCopying: Eq + Hash + Object {
     /// method and returns `nil`, this binding method will panic.
     #[inline]
     fn copy(&self) -> Box<Self::Result> {
-        let obj = msg_send!((id)[self.as_ptr(), copy]);
+        let obj = msg_send!((id)[self, copy]);
         // SAFETY: Objects retured by selectors beginning with ‘copy’ must be released.
         NonNull::new(obj)
             .map(|obj| unsafe { Box::with_transfer(obj) })

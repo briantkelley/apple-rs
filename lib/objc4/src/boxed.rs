@@ -1,5 +1,5 @@
 use crate::sys::{objc_object, objc_release, objc_retain};
-use crate::{id, Object, Upcast};
+use crate::{Object, Upcast};
 use core::borrow::{Borrow, BorrowMut};
 use core::fmt::{self, Debug, Formatter};
 use core::marker::PhantomData;
@@ -49,17 +49,6 @@ where
             obj,
             phantom: PhantomData,
         }
-    }
-
-    /// Consumes the box and transfers ownership of the raw, non-null, retained Objective-C object
-    /// instance pointer to the caller.
-    ///
-    /// To avoid a memory leak, the returned pointer must be released.
-    #[must_use]
-    pub fn into_retained_ptr(self) -> id {
-        let obj = self.obj;
-        forget(self);
-        obj.as_ptr()
     }
 
     /// Converts the type interface from `T` to `U`. Assumes the caller guarantees safety.

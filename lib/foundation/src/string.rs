@@ -50,7 +50,8 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
         let obj = msg_send!((id)[self.alloc().as_ptr(), initWithBytes:(*const u8)buf.as_ptr()
                                                                                  length:(usize)buf.len()
                                                                                encoding:(usize)encoding as usize]);
-        // SAFETY: Objects retured by selectors beginning with ‘alloc’ must be released.
+        // SAFETY: Objects retured by selectors beginning with ‘init’ consume their argument
+        // (selectors beginning with ‘alloc’ must also be released) and must be released.
         NonNull::new(obj).map(|obj| unsafe { Box::with_transfer(obj) })
     }
 
@@ -74,14 +75,14 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
     /// The number of UTF-16 code units in the receiver.
     #[inline]
     fn len(&self) -> usize {
-        msg_send!((usize)[self.as_ptr(), length])
+        msg_send!((usize)[self, length])
     }
 
     /// Returns a boolean value that indicates whether a given string is equal to the receiver using
     /// a literal Unicode-based comparison.
     #[inline]
     fn is_equal_to_string(&self, other: &impl NSStringInterface) -> bool {
-        msg_send!((bool)[self.as_ptr(), isEqualToString:(id)other.as_ptr()])
+        msg_send!((bool)[self, isEqualToString:(id)other])
     }
 
     /// A null-terminated UTF-8 representation of the string.
@@ -92,7 +93,7 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
     /// autorelease scope, which is not well-defined.
     #[inline]
     unsafe fn as_c_str(&self) -> Option<&CStr> {
-        let str = msg_send!((*const c_char)[self.as_ptr(), UTF8String]);
+        let str = msg_send!((*const c_char)[self, UTF8String]);
         if str.is_null() {
             None
         } else {
@@ -149,7 +150,8 @@ unsafe impl Sync for __CFConstantString {}
 
 impl Debug for __CFConstantString {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let obj = self.as_ptr();
+        let obj: *const _ = self;
+        let obj: *const objc_object = obj.cast();
         // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid pointer to an
         // Objective-C object.
         unsafe { &*obj }.fmt(f)
@@ -164,14 +166,6 @@ impl Hash for __CFConstantString {
 
 impl NSCopying for __CFConstantString {
     type Result = NSString;
-
-    #[inline]
-    fn copy(&self) -> Box<Self::Result> {
-        let ptr = self.as_ptr();
-        // SAFETY: ptr is derived from a reference and therefore cannot be null.
-        let obj = unsafe { NonNull::new_unchecked(ptr) };
-        objc4::Box::with_retained(obj)
-    }
 }
 
 impl<T> PartialEq<T> for __CFConstantString

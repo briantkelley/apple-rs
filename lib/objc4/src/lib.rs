@@ -51,12 +51,12 @@ pub trait NSArrayClassInterface: NSObjectClassInterface {
 pub trait NSArrayInterface: NSObjectInterface {
     #[must_use]
     fn count(&self) -> usize {
-        msg_send!((usize)[self.as_ptr(), count])
+        msg_send!((usize)[self, count])
     }
 
     #[must_use]
     fn object_at_index(&self, index: usize) -> &objc_object {
-        let obj = msg_send!((id)[self.as_ptr(), objectAtIndex:(usize)index]);
+        let obj = msg_send!((id)[self, objectAtIndex:(usize)index]);
         // SAFETY: `NSArray` cannot store `nil` pointers.
         unsafe { &*obj }
     }

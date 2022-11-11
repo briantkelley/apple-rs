@@ -8,10 +8,10 @@ impl objc_class {
     /// Returns the name of a class.
     #[must_use]
     pub fn name(&self) -> &CStr {
-        let cls = self.as_ptr().cast();
+        let cls: *const _ = self;
         // SAFETY: `cls` is derived from a reference so it is guaranteed to be a valid pointer to an
         // Objective-C class.
-        let name = unsafe { class_getName(cls) }.as_ptr();
+        let name = unsafe { class_getName(cls as *mut _) }.as_ptr();
         // SAFETY: `class_getName()` is guaranteed to return a valid C-style string.
         unsafe { CStr::from_ptr(name) }
     }
@@ -53,13 +53,13 @@ mod tests {
 
         // object_getClassName()
         assert_eq!(
-            unsafe { NSCharacterConversionException.class_name() }.to_bytes(),
+            unsafe { (*NSCharacterConversionException).class_name() }.to_bytes(),
             EXPECTED
         );
 
         // object_getClass(), class_getName()
         assert_eq!(
-            unsafe { NSCharacterConversionException.class() }
+            unsafe { (*NSCharacterConversionException).class() }
                 .name()
                 .to_bytes(),
             EXPECTED
@@ -71,7 +71,7 @@ mod tests {
         const META_1: &[u8] = b"__NSCFConstantString";
         const META_2: &[u8] = b"NSObject";
 
-        let class = unsafe { NSCharacterConversionException.class() };
+        let class = unsafe { (*NSCharacterConversionException).class() };
         let meta_class = class.class();
 
         assert_ne!(class, meta_class);

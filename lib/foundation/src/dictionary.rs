@@ -21,7 +21,7 @@ pub trait NSDictionaryInterface:
     /// Returns the value associated with a given key.
     #[inline]
     fn get(&self, k: &Self::Key) -> Option<&Self::Value> {
-        let obj = msg_send!((id)[self.as_ptr(), objectForKey:(id)k.as_ptr()]).cast::<Self::Value>();
+        let obj = msg_send!((id)[self, objectForKey:(id)k]).cast::<Self::Value>();
         // SAFETY: If the dictionary contains the value, the pointer is guaranteed to be valid.
         unsafe { obj.as_ref() }
     }
@@ -29,7 +29,7 @@ pub trait NSDictionaryInterface:
     /// The number of entries in the dictionary.
     #[inline]
     fn len(&self) -> usize {
-        msg_send!((usize)[self.as_ptr(), count])
+        msg_send!((usize)[self, count])
     }
 
     /// Returns a Boolean value that indicates whether the contents of the receiving dictionary are
@@ -39,7 +39,7 @@ pub trait NSDictionaryInterface:
         &self,
         other: &impl NSDictionaryInterface<Key = Self::Key, Value = Self::Value>,
     ) -> bool {
-        msg_send!((bool)[self.as_ptr(), isEqualToDictionary:(id)other.as_ptr()])
+        msg_send!((bool)[self, isEqualToDictionary:(id)other])
     }
 }
 
@@ -79,13 +79,13 @@ pub trait NSMutableDictionaryInterface: NSDictionaryInterface {
     /// Removes a given key and its associated value from the dictionary.
     #[inline]
     fn remove(&mut self, k: &Self::Key) {
-        msg_send!([self.as_ptr(), removeObjectForKey:(id)k.as_ptr()]);
+        msg_send!([self, removeObjectForKey:(id)k]);
     }
 
     /// Adds a given key-value pair to the dictionary.
     #[inline]
     fn set(&mut self, k: &Self::Key, v: Box<Self::Value>) {
-        msg_send!([self.as_ptr(), setObject:(id)v.as_ptr() forKey:(id)k.as_ptr()]);
+        msg_send!([self, setObject:(id)&*v forKey:(id)k]);
     }
 }
 

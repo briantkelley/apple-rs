@@ -9,27 +9,29 @@ pub trait NSObjectProtocol: Eq + Object + PartialEq<objc_object> {
     /// Returns a Boolean value that indicates whether the receiver and a given object are equal.
     #[inline]
     fn is_equal(&self, object: &impl Object) -> bool {
-        msg_send!((bool)[self.as_ptr(), isEqual:(id)object.as_ptr()])
+        msg_send!((bool)[self, isEqual:(id)object])
     }
 
     /// Returns an integer that can be used as a table address in a hash table structure.
     #[inline]
     fn hash(&self) -> usize {
-        msg_send!((usize)[self.as_ptr(), hash])
+        msg_send!((usize)[self, hash])
     }
 
     /// Returns the class object for the receiver’s superclass
     #[inline]
-    fn superclass(&self) -> Option<NonNull<objc_class>> {
-        let cls = msg_send!((*mut objc_class)[self.as_ptr(), superclass]);
-        NonNull::new(cls)
+    fn superclass(&self) -> Option<&'static objc_class> {
+        let cls = msg_send!((*mut objc_class)[self, superclass]);
+        // SAFETY: If the pointer is non-null, its value is owned by the Objective-C runtime and
+        // exists for the lifetime of the process.
+        unsafe { cls.as_ref() }
     }
 
     /// Returns a Boolean value that indicates whether the receiver does not descend from
     /// [`NSObjectInterface`].
     #[inline]
     fn is_proxy(&self) -> bool {
-        msg_send!((bool)[self.as_ptr(), isProxy])
+        msg_send!((bool)[self, isProxy])
     }
 }
 
@@ -83,12 +85,6 @@ pub trait NSObjectClassInterface {
         // SAFETY: Objects retured by selectors beginning with ‘new’ must be released.
         unsafe { Box::with_transfer(obj) }
     }
-
-    /// Returns the non-null, generic Objective-C class pointer for the meta class.
-    fn as_ptr(&self) -> id {
-        let ptr: *const _ = self;
-        (ptr as *mut Self).cast()
-    }
 }
 
 #[cfg(test)]
@@ -105,7 +101,7 @@ mod tests {
     #[test]
     fn test_hash() {
         let o = NSObjectClass.new();
-        assert_eq!(o.hash(), o.as_ptr() as usize);
+        assert_eq!(o.hash(), o.obj.as_ptr() as usize);
     }
 
     #[test]
