@@ -51,7 +51,7 @@ where
     ///
     /// To avoid a memory leak, the object must not require an additional release.
     #[must_use]
-    pub fn with_retained(obj: NonNull<objc_object>) -> Self {
+    pub fn with_retain(obj: NonNull<objc_object>) -> Self {
         // SAFETY: Caller is responsible for ensuring `obj` is a valid, balanced object pointer.
         let _ = unsafe { objc_retain(obj.as_ptr()) };
         Self {
@@ -100,7 +100,7 @@ where
     T: Object,
 {
     fn clone(&self) -> Self {
-        Self::with_retained(self.obj)
+        Self::with_retain(self.obj)
     }
 }
 

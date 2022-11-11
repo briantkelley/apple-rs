@@ -26,14 +26,14 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_i8(&self, value: i8) -> Box<Self::Instance> {
-        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithChar:(i8)value])).unwrap())
+        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithChar:(i8)value])).unwrap())
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_u8(&self, value: u8) -> Box<Self::Instance> {
-        Box::with_retained(
+        Box::with_retain(
             NonNull::new(msg_send!((id)[self, numberWithUnsignedChar:(u8)value])).unwrap(),
         )
     }
@@ -42,14 +42,14 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_i16(&self, value: i16) -> Box<Self::Instance> {
-        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithShort:(i16)value])).unwrap())
+        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithShort:(i16)value])).unwrap())
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_u16(&self, value: u16) -> Box<Self::Instance> {
-        Box::with_retained(
+        Box::with_retain(
             NonNull::new(msg_send!((id)[self, numberWithUnsignedShort:(u16)value])).unwrap(),
         )
     }
@@ -58,14 +58,14 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_i32(&self, value: i32) -> Box<Self::Instance> {
-        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithInt:(i32)value])).unwrap())
+        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithInt:(i32)value])).unwrap())
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_u32(&self, value: u32) -> Box<Self::Instance> {
-        Box::with_retained(
+        Box::with_retain(
             NonNull::new(msg_send!((id)[self, numberWithUnsignedInt:(u32)value])).unwrap(),
         )
     }
@@ -74,7 +74,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_i64(&self, value: i64) -> Box<Self::Instance> {
-        Box::with_retained(
+        Box::with_retain(
             NonNull::new(msg_send!((id)[self, numberWithLongLong:(i64)value])).unwrap(),
         )
     }
@@ -83,7 +83,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_u64(&self, value: u64) -> Box<Self::Instance> {
-        Box::with_retained(
+        Box::with_retain(
             NonNull::new(msg_send!((id)[self, numberWithUnsignedLongLong:(u64)value])).unwrap(),
         )
     }
@@ -92,30 +92,28 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_f32(&self, value: f32) -> Box<Self::Instance> {
-        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithFloat:(f32)value])).unwrap())
+        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithFloat:(f32)value])).unwrap())
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_f64(&self, value: f64) -> Box<Self::Instance> {
-        Box::with_retained(
-            NonNull::new(msg_send!((id)[self, numberWithDouble:(f64)value])).unwrap(),
-        )
+        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithDouble:(f64)value])).unwrap())
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_bool(&self, value: bool) -> Box<Self::Instance> {
-        Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithBool:(bool)value])).unwrap())
+        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithBool:(bool)value])).unwrap())
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_isize(&self, value: isize) -> Box<Self::Instance> {
-        Box::with_retained(
+        Box::with_retain(
             NonNull::new(msg_send!((id)[self, numberWithInteger:(isize)value])).unwrap(),
         )
     }
@@ -124,7 +122,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_usize(&self, value: usize) -> Box<Self::Instance> {
-        Box::with_retained(
+        Box::with_retain(
             NonNull::new(msg_send!((id)[self, numberWithUnsignedInteger:(usize)value])).unwrap(),
         )
     }
