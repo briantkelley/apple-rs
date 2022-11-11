@@ -5,7 +5,6 @@ use core::ffi::CStr;
 use core::fmt::{self, Debug, Formatter};
 
 impl objc_class {
-    /// Returns the name of a class.
     #[must_use]
     pub fn name(&self) -> &CStr {
         let cls: *const _ = self;
@@ -27,12 +26,12 @@ impl Debug for objc_class {
 impl Eq for objc_class {}
 impl Object for objc_class {}
 
-// Class objects are uniqued so a pointer comparison is sufficient for equality.
 impl PartialEq for objc_class {
     fn eq(&self, other: &Self) -> bool {
         let lhs: *const _ = self;
         let rhs: *const _ = other;
 
+        // Class objects are uniqued so a pointer comparison is sufficient for equality.
         lhs == rhs
     }
 }

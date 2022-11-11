@@ -36,7 +36,6 @@ assert_eq!(dict.len(), 1);
     missing_abi,
     missing_copy_implementations,
     missing_debug_implementations,
-    missing_docs,
     non_ascii_idents,
     noop_method_call,
     pointer_structural_match,

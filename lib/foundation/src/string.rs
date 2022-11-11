@@ -8,41 +8,22 @@ use objc4::{
     NSObjectProtocol, Object,
 };
 
-/// The following constants are provided by `NSString` as possible string encodings.
 #[derive(Clone, Copy, Debug)]
 #[repr(usize)]
 pub enum NSStringEncoding {
-    /// Strict 7-bit ASCII encoding within 8-bit chars; ASCII values 0…127 only.
     ASCII = 1,
-
-    /// An 8-bit representation of Unicode characters, suitable for transmission or storage by ASCII-based systems.
     UTF8 = 4,
-
-    /// 16-bit UTF encoding.
     UTF16 = 10,
-
-    /// [`NSStringEncoding::UTF16`] encoding with explicit endianness specified.
     UTF16BigEndian = 0x9000_0100,
-
-    /// [`NSStringEncoding::UTF16`] encoding with explicit endianness specified.
     UTF16LittleEndian = 0x9400_0100,
-
-    /// 32-bit UTF encoding.
     UTF32 = 0x8c00_0100,
-
-    /// [`NSStringEncoding::UTF32`] encoding with explicit endianness specified.
     UTF32BigEndian = 0x9800_0100,
-
-    /// [`NSStringEncoding::UTF32`] encoding with explicit endianness specified.
     UTF32LittleEndian = 0x9c00_0100,
 }
 
 extern_class!(Foundation, pub NSString 'cls, NSObject 'cls; -PartialEq);
 
-/// A static, plain-text Unicode string object.
 pub trait NSStringClassInterface: NSObjectClassInterface {
-    /// Returns an `NSString` object containing a given number of bytes from a given buffer of bytes
-    /// interpreted in a given encoding.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -69,17 +50,13 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
     }
 }
 
-/// A static, plain-text Unicode string object.
 #[allow(clippy::len_without_is_empty)]
 pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
-    /// The number of UTF-16 code units in the receiver.
     #[inline]
     fn len(&self) -> usize {
         msg_send!((usize)[self, length])
     }
 
-    /// Returns a boolean value that indicates whether a given string is equal to the receiver using
-    /// a literal Unicode-based comparison.
     #[inline]
     fn is_equal_to_string(&self, other: &impl NSStringInterface) -> bool {
         msg_send!((bool)[self, isEqualToString:(id)other])

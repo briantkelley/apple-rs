@@ -6,7 +6,6 @@ use core::fmt::{self, Debug, Formatter};
 ///
 /// Includes bindings to the Objective-C runtime functions whose names begin with `object_`.
 pub trait Object: Debug {
-    /// Returns the class of the object.
     fn class(&self) -> &'static objc_class {
         let obj: *const _ = self;
         // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid pointer to an
@@ -16,7 +15,6 @@ pub trait Object: Debug {
         unsafe { &*cls }
     }
 
-    /// Returns the class name of the object.
     fn class_name(&self) -> &'static CStr {
         let obj: *const _ = self;
         // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid pointer to an

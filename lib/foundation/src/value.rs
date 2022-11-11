@@ -7,7 +7,6 @@ use objc4::{
 
 extern_class!(Foundation, pub NSValue, NSObject 'cls);
 
-/// A simple container for a single C or Objective-C data item.
 pub trait NSValueInterface: NSObjectInterface + NSCopying<Result = Self> {}
 
 impl Hash for NSValue {
@@ -22,9 +21,7 @@ impl NSCopying for NSValue {
 
 extern_class!(Foundation, pub NSNumber 'cls, NSValue, NSObject 'cls; -PartialEq);
 
-/// An object wrapper for primitive scalar numeric values.
 pub trait NSNumberClassInterface: NSObjectClassInterface {
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `i8`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -32,7 +29,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithChar:(i8)value])).unwrap())
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u8`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -42,7 +38,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         )
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `i16`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -50,7 +45,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithShort:(i16)value])).unwrap())
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u16`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -60,7 +54,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         )
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `i32`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -68,7 +61,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithInt:(i32)value])).unwrap())
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u32`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -78,7 +70,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         )
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `i64`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -88,7 +79,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         )
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `u64`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -98,7 +88,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         )
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `f32`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -106,7 +95,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithFloat:(f32)value])).unwrap())
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `f64`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -116,7 +104,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         )
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `bool`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -124,7 +111,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         Box::with_retained(NonNull::new(msg_send!((id)[self, numberWithBool:(bool)value])).unwrap())
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `isize`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -134,7 +120,6 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
         )
     }
 
-    /// Creates and returns an `NSNumber` object containing a given value, treating it as a `usize`.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
@@ -145,88 +130,72 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     }
 }
 
-/// An object wrapper for primitive scalar numeric values.
 pub trait NSNumberInterface: NSValueInterface {
-    /// The number object's value expressed as a `i8`.
     #[inline]
     fn as_i8(&self) -> i8 {
         msg_send!((i8)[self, charValue])
     }
 
-    /// The number object's value expressed as a `u8`.
     #[inline]
     fn as_u8(&self) -> u8 {
         msg_send!((u8)[self, unsignedCharValue])
     }
 
-    /// The number object's value expressed as a `i16`.
     #[inline]
     fn as_i16(&self) -> i16 {
         msg_send!((i16)[self, shortValue])
     }
 
-    /// The number object's value expressed as a `u16`.
     #[inline]
     fn as_u16(&self) -> u16 {
         msg_send!((u16)[self, unsignedShortValue])
     }
 
-    /// The number object's value expressed as a `i32`.
     #[inline]
     fn as_i32(&self) -> i32 {
         msg_send!((i32)[self, intValue])
     }
 
-    /// The number object's value expressed as a `u32`.
     #[inline]
     fn as_u32(&self) -> u32 {
         msg_send!((u32)[self, unsignedIntValue])
     }
 
-    /// The number object's value expressed as a `i64`.
     #[inline]
     fn as_i64(&self) -> i64 {
         msg_send!((i64)[self, longLongValue])
     }
 
-    /// The number object's value expressed as a `u64`.
     #[inline]
     fn as_u64(&self) -> u64 {
         msg_send!((u64)[self, unsignedLongLongValue])
     }
 
-    /// The number object's value expressed as a `f32`.
     #[inline]
     fn as_f32(&self) -> f32 {
         msg_send!((f32)[self, floatValue])
     }
 
-    /// The number object's value expressed as a `f64`.
     #[inline]
     fn as_f64(&self) -> f64 {
         msg_send!((f64)[self, doubleValue])
     }
 
-    /// The number object's value expressed as a `bool`.
     #[inline]
     fn as_bool(&self) -> bool {
         msg_send!((bool)[self, boolValue])
     }
 
-    /// The number object's value expressed as a `isize`.
     #[inline]
     fn as_isize(&self) -> isize {
         msg_send!((isize)[self, integerValue])
     }
 
-    /// The number object's value expressed as a `usize`.
     #[inline]
     fn as_usize(&self) -> usize {
         msg_send!((usize)[self, unsignedIntegerValue])
     }
 
-    /// Returns a Boolean value that indicates whether the number object’s value and a given number
-    /// are equal.
     #[inline]
     fn is_equal_to_number(&self, other: &impl NSNumberInterface) -> bool {
         msg_send!((bool)[self, isEqualToNumber:(id)other])

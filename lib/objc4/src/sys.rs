@@ -6,7 +6,6 @@ use core::ptr::NonNull;
 // $ISYSROOT/objc/objc.h
 //
 
-/// The type that represents an Objective-C class.
 #[allow(missing_copy_implementations, non_camel_case_types)]
 #[repr(C)]
 pub struct objc_class {
@@ -22,17 +21,14 @@ unsafe impl Send for objc_class {}
 // runtime class API is fully thread safe.
 unsafe impl Sync for objc_class {}
 
-/// An opaque type that represents an Objective-C class.
 pub type Class = *mut objc_class;
 
-/// The base type of an instance of an Objective-C class.
 #[allow(missing_copy_implementations, non_camel_case_types)]
 #[repr(C)]
 pub struct objc_object {
     isa: [u8; size_of::<usize>()],
 }
 
-/// A pointer to an instance of a class.
 #[allow(non_camel_case_types)]
 pub type id = *mut objc_object;
 

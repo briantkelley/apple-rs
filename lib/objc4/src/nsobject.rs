@@ -4,21 +4,17 @@ use core::ptr::NonNull;
 
 extern_class!(objc, kind = dylib, pub NSObject 'cls);
 
-/// The group of methods that are fundamental to all Objective-C objects.
 pub trait NSObjectProtocol: Eq + Object + PartialEq<objc_object> {
-    /// Returns a Boolean value that indicates whether the receiver and a given object are equal.
     #[inline]
     fn is_equal(&self, object: &impl Object) -> bool {
         msg_send!((bool)[self, isEqual:(id)object])
     }
 
-    /// Returns an integer that can be used as a table address in a hash table structure.
     #[inline]
     fn hash(&self) -> usize {
         msg_send!((usize)[self, hash])
     }
 
-    /// Returns the class object for the receiver’s superclass
     #[inline]
     fn superclass(&self) -> Option<&'static objc_class> {
         let cls = msg_send!((*mut objc_class)[self, superclass]);
@@ -27,20 +23,14 @@ pub trait NSObjectProtocol: Eq + Object + PartialEq<objc_object> {
         unsafe { cls.as_ref() }
     }
 
-    /// Returns a Boolean value that indicates whether the receiver does not descend from
-    /// [`NSObjectInterface`].
     #[inline]
     fn is_proxy(&self) -> bool {
         msg_send!((bool)[self, isProxy])
     }
 }
 
-/// The root class of most Objective-C class hierarchies, from which subclasses inherit a basic
-/// interface to the runtime system and the ability to behave as Objective-C objects.
 pub trait NSObjectInterface: NSObjectProtocol {}
 
-/// The root meta class of most Objective-C class hierarchies, from which subclasses inherit a basic
-/// interface to the runtime system and the ability to behave as Objective-C objects.
 pub trait NSObjectClassInterface {
     /// The concrete type that implements class instance interface.
     type Instance: NSObjectInterface;
@@ -60,7 +50,7 @@ pub trait NSObjectClassInterface {
     fn alloc(&self) -> NonNull<objc_object> {
         let cls: *const _ = self;
         // SAFETY: `self` is a reference so it is guaranteed to be a valid pointer to an Objective-C
-        // meta class object.
+        // class object.
         NonNull::new(unsafe { objc_alloc(cls as *mut _) }).unwrap()
     }
 
@@ -80,7 +70,7 @@ pub trait NSObjectClassInterface {
     #[must_use]
     fn new(&self) -> Box<Self::Instance> {
         let cls: *const _ = self;
-        // SAFETY: The trait implementation guarantees `cls` is a valid Objective-C class.
+        // SAFETY: The trait implementation guarantees `cls` is a valid Objective-C class object.
         let obj = NonNull::new(unsafe { objc_opt_new(cls as *mut _) }).unwrap();
         // SAFETY: Objects retured by selectors beginning with ‘new’ must be released.
         unsafe { Box::with_transfer(obj) }
