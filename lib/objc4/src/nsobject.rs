@@ -1,20 +1,11 @@
 use crate::sys::{objc_alloc, objc_opt_new};
 use crate::{id, objc_class, objc_object, Box, Object};
+use core::hash::Hash;
 use core::ptr::NonNull;
 
 extern_class!(objc, kind = dylib, pub NSObject 'cls);
 
-pub trait NSObjectProtocol: Eq + Object + PartialEq<objc_object> {
-    #[inline]
-    fn is_equal(&self, object: &impl Object) -> bool {
-        msg_send!((bool)[self, isEqual:(id)object])
-    }
-
-    #[inline]
-    fn hash(&self) -> usize {
-        msg_send!((usize)[self, hash])
-    }
-
+pub trait NSObjectProtocol: Eq + Hash + Object + PartialEq<objc_object> {
     #[inline]
     fn superclass(&self) -> Option<&'static objc_class> {
         let cls = msg_send!((*mut objc_class)[self, superclass]);
@@ -28,8 +19,6 @@ pub trait NSObjectProtocol: Eq + Object + PartialEq<objc_object> {
         msg_send!((bool)[self, isProxy])
     }
 }
-
-pub trait NSObjectInterface: NSObjectProtocol {}
 
 pub trait NSObjectClassInterface {
     /// The concrete type that implements class instance interface.
@@ -77,9 +66,12 @@ pub trait NSObjectClassInterface {
     }
 }
 
+pub trait NSObjectInterface: NSObjectProtocol {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tests::AddHasher;
 
     #[test]
     fn test_class() {
@@ -91,7 +83,10 @@ mod tests {
     #[test]
     fn test_hash() {
         let o = NSObjectClass.new();
-        assert_eq!(o.hash(), o.obj.as_ptr() as usize);
+        let mut hasher = AddHasher(0);
+
+        o.hash(&mut hasher);
+        assert_eq!(hasher.0, o.obj.as_ptr() as u64);
     }
 
     #[test]
@@ -99,13 +94,9 @@ mod tests {
         let a = NSObjectClass.new();
         let b = NSObjectClass.new();
 
-        assert!(a.is_equal(&*a));
-        assert!(b.is_equal(&*b));
         assert_eq!(a, a);
         assert_eq!(b, b);
 
-        assert!(!a.is_equal(&*b));
-        assert!(!b.is_equal(&*a));
         assert_ne!(a, b);
         assert_ne!(b, a);
     }

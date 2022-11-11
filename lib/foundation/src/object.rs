@@ -1,8 +1,7 @@
-use core::hash::Hash;
 use core::ptr::NonNull;
 use objc4::{id, msg_send, Box, Object};
 
-pub trait NSCopying: Eq + Hash + Object {
+pub trait NSCopying: Object {
     /// The object type returned by the copy.
     type Result: Object;
 

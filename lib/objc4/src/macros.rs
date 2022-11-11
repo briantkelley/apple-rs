@@ -72,11 +72,9 @@ macro_rules! extern_class {
             }
         }
 
-        $crate::paste::paste! {
-            impl $(< $($param),+ >)? $crate::Object for $class $(< $($param),+ >)?
-            $(where $($param : $ty),+)?
-            {}
-        }
+        impl $(< $($param),+ >)? $crate::Object for $class $(< $($param),+ >)?
+        $(where $($param : $ty),+)?
+        {}
     };
     (@3 $class:ident; $(; $($param:ident : $ty:path),+)?) => {};
     (@3 $class:ident; $interface:ident $($interface_class_interface:lifetime)? $(< $($interface_param:ident),+ >)? $(, $super:ident $($super_class_interface:lifetime)? $(< $($super_param:ident),+ >)?)* $(; $($param:ident : $ty:path),+)?) => {
@@ -119,10 +117,20 @@ macro_rules! extern_class {
             $(where $($param : $ty),+)?
             {}
 
+            #[allow(unused_qualifications)]
+            impl $(< $($param),+ >)? core::hash::Hash for $class $(< $($param),+ >)?
+            $(where $($param : $ty),+)?
+            {
+                fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+                    let hash = $crate::msg_send!((usize)[self, hash]);
+                    state.write_usize(hash);
+                }
+            }
+
             impl $(< $($param),+ >)? PartialEq<$crate::Box<Self>> for $class $(< $($param),+ >)?
             $(where $($param : $ty),+)?
             {
-                fn eq(&self, other: & $crate::Box<Self>) -> bool {
+                fn eq(&self, other: &$crate::Box<Self>) -> bool {
                     self == core::ops::Deref::deref(other)
                 }
             }
@@ -130,8 +138,8 @@ macro_rules! extern_class {
             impl $(< $($param),+ >)? PartialEq<$crate::objc_object> for $class $(< $($param),+ >)?
             $(where $($param : $ty),+)?
             {
-                fn eq(&self, other: & $crate::objc_object) -> bool {
-                    $crate::NSObjectProtocol::is_equal(self, other)
+                fn eq(&self, other: &$crate::objc_object) -> bool {
+                    $crate::msg_send!((bool)[self, isEqual:(id)other])
                 }
             }
 
@@ -163,10 +171,10 @@ macro_rules! extern_class {
         $crate::extern_class!(@7 $class; $super $(; $($param : $ty),+)?);
     };
     (@7 $class:ident; $super:path $(; $($param:ident : $ty:path),+)?) => {
-        impl<'a $(, $($param),+ )? > $crate::Upcast< &'a $class $(< $($param),+ >)?, &'a $super > for $class $(< $($param),+ >)?
+        impl<'a $(, $($param),+ )?> $crate::Upcast<&'a $class $(< $($param),+ >)?, &'a $super> for $class $(< $($param),+ >)?
         $(where $($param : $ty),+)?
         {
-            fn upcast(from: &Self) -> & $super {
+            fn upcast(from: &Self) -> &$super {
                 let ptr: *const Self = from;
                 let ptr = ptr.cast();
                 // SAFETY: We trust the class hierarchy specification is correct.
@@ -177,13 +185,13 @@ macro_rules! extern_class {
     (@8 $class:ident $(; $($param:ident : $ty:path),+)?) => {
         // The macro invocation does not contain -PartialEq so implement the default.
         $crate::paste::paste! {
-            impl< T $(, $($param),+)? > PartialEq<T> for $class $(< $($param),+ >)?
+            impl< T $(, $($param),+)?> PartialEq<T> for $class $(< $($param),+ >)?
             where
                 T: [< $class Interface >]
                 $($(, $param : $ty)+)?
             {
                 fn eq(&self, other: &T) -> bool {
-                    $crate::NSObjectProtocol::is_equal(self, other)
+                    $crate::msg_send!((bool)[self, isEqual:(id)other])
                 }
             }
         }

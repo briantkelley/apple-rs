@@ -1,9 +1,5 @@
 use crate::NSCopying;
-use core::hash::{Hash, Hasher};
-use objc4::{
-    extern_class, id, msg_send, Box, NSObjectClassInterface, NSObjectInterface, NSObjectProtocol,
-    Object,
-};
+use objc4::{extern_class, id, msg_send, Box, NSObjectClassInterface, NSObjectInterface, Object};
 
 extern_class!(Foundation, pub NSDictionary<Key, Value>, NSObject 'cls; Key: NSCopying, Value: Object; -PartialEq);
 
@@ -28,24 +24,6 @@ pub trait NSDictionaryInterface:
     fn len(&self) -> usize {
         msg_send!((usize)[self, count])
     }
-
-    #[inline]
-    fn is_equal_to_dictionary(
-        &self,
-        other: &impl NSDictionaryInterface<Key = Self::Key, Value = Self::Value>,
-    ) -> bool {
-        msg_send!((bool)[self, isEqualToDictionary:(id)other])
-    }
-}
-
-impl<Key, Value> Hash for NSDictionary<Key, Value>
-where
-    Key: NSCopying,
-    Value: Object,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_usize(NSObjectProtocol::hash(self));
-    }
 }
 
 impl<Key, Value> NSCopying for NSDictionary<Key, Value>
@@ -63,7 +41,7 @@ where
     T: NSDictionaryInterface<Key = Key, Value = Value>,
 {
     fn eq(&self, other: &T) -> bool {
-        self.is_equal_to_dictionary(other)
+        msg_send!((bool)[self, isEqualToDictionary:(id)other])
     }
 }
 
@@ -93,16 +71,6 @@ where
     }
 }
 
-impl<Key, Value> Hash for NSMutableDictionary<Key, Value>
-where
-    Key: NSCopying,
-    Value: Object,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_usize(NSObjectProtocol::hash(self));
-    }
-}
-
 impl<Key, Value> NSCopying for NSMutableDictionary<Key, Value>
 where
     Key: NSCopying,
@@ -118,7 +86,7 @@ where
     T: NSDictionaryInterface<Key = Key, Value = Value>,
 {
     fn eq(&self, other: &T) -> bool {
-        self.is_equal_to_dictionary(other)
+        msg_send!((bool)[self, isEqualToDictionary:(id)other])
     }
 }
 
@@ -179,14 +147,11 @@ mod test {
 
         let dict = dict_mut.upcast::<NSDictionary<NSString, NSObject>>();
         assert_eq!(dict.len(), 2);
-        assert!(dict
-            .get(&string)
-            .unwrap()
-            .is_equal(&*NSStringClass.from_str("value").upcast::<NSObject>()));
-        assert!(dict
-            .get(&number)
-            .unwrap()
-            .is_equal(&*NSNumberClass.from_i32(0xf00d).upcast::<NSObject>()));
+        assert_eq!(
+            *dict.get(&string).unwrap(),
+            *NSStringClass.from_str("value")
+        );
+        assert_eq!(*dict.get(&number).unwrap(), *NSNumberClass.from_i32(0xf00d));
 
         let object = dict.upcast::<NSObject>();
         assert!(matches!(

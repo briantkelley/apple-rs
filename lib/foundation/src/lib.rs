@@ -62,6 +62,8 @@ mod macros;
 mod dictionary;
 mod object;
 mod string;
+#[cfg(test)]
+mod tests;
 mod value;
 
 pub use dictionary::{

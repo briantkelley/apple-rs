@@ -111,6 +111,8 @@ mod class;
 mod nsobject;
 mod object;
 mod sys;
+#[cfg(test)]
+mod tests;
 mod upcast;
 
 pub use arc::Arc;

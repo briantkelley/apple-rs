@@ -1,11 +1,9 @@
 use crate::NSCopying;
 use core::ffi::{c_char, CStr};
 use core::fmt::{self, Debug, Formatter};
-use core::hash::{Hash, Hasher};
 use core::ptr::NonNull;
 use objc4::{
     extern_class, id, msg_send, objc_object, Box, NSObjectClassInterface, NSObjectInterface,
-    NSObjectProtocol, Object,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -57,11 +55,6 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
         msg_send!((usize)[self, length])
     }
 
-    #[inline]
-    fn is_equal_to_string(&self, other: &impl NSStringInterface) -> bool {
-        msg_send!((bool)[self, isEqualToString:(id)other])
-    }
-
     /// A null-terminated UTF-8 representation of the string.
     ///
     /// # Safety
@@ -80,12 +73,6 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
     }
 }
 
-impl Hash for NSString {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_usize(NSObjectProtocol::hash(self));
-    }
-}
-
 impl NSCopying for NSString {
     type Result = Self;
 }
@@ -95,7 +82,7 @@ where
     T: NSStringInterface,
 {
     fn eq(&self, other: &T) -> bool {
-        self.is_equal_to_string(other)
+        msg_send!((bool)[self, isEqualToString:(id)other])
     }
 }
 
@@ -118,11 +105,6 @@ pub struct __CFConstantString {
     pub _length: usize,
 }
 
-impl Eq for __CFConstantString {}
-impl NSObjectInterface for __CFConstantString {}
-impl NSObjectProtocol for __CFConstantString {}
-impl NSStringInterface for __CFConstantString {}
-impl Object for __CFConstantString {}
 unsafe impl Sync for __CFConstantString {}
 
 impl Debug for __CFConstantString {
@@ -135,78 +117,25 @@ impl Debug for __CFConstantString {
     }
 }
 
-impl Hash for __CFConstantString {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_usize(NSObjectProtocol::hash(self));
-    }
-}
-
-impl NSCopying for __CFConstantString {
-    type Result = NSString;
-}
-
-impl<T> PartialEq<T> for __CFConstantString
-where
-    T: NSStringInterface,
-{
-    fn eq(&self, other: &T) -> bool {
-        self.is_equal_to_string(other)
-    }
-}
-
-impl<T> PartialEq<Box<T>> for __CFConstantString
-where
-    T: NSStringInterface,
-{
-    fn eq(&self, other: &Box<T>) -> bool {
-        self.is_equal_to_string(&**other)
-    }
-}
-
-impl PartialEq<objc_object> for __CFConstantString {
-    fn eq(&self, other: &objc_object) -> bool {
-        self.is_equal(other)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::string_literal;
+    use crate::tests::AddHasher;
+    use core::hash::Hash;
 
     string_literal!(static HELLO_WORLD: NSString = "Hello, World!");
 
-    struct AddHasher(u64);
-
-    impl Hasher for AddHasher {
-        fn finish(&self) -> u64 {
-            self.0
-        }
-
-        fn write(&mut self, bytes: &[u8]) {
-            let value = match bytes.len() {
-                0 => 0_u64,
-                1 => u64::from(bytes[0]),
-                2 => u64::from(u16::from_ne_bytes([bytes[0], bytes[1]])),
-                4 => u64::from(u32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])),
-                8 => u64::from_ne_bytes([
-                    bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
-                ]),
-                _ => bytes
-                    .iter()
-                    .fold(0_u64, |sum, byte| sum.wrapping_add(u64::from(*byte))),
-            };
-            self.0 = self.0.wrapping_add(value);
-        }
-    }
-
     #[test]
     fn test_copy() {
-        let orig = &HELLO_WORLD;
+        let orig = HELLO_WORLD;
         let copy = orig.copy();
 
-        assert!(orig.is_equal(&*copy));
-        assert!(orig.is_equal_to_string(&*copy));
+        assert_eq!(*orig, *copy);
+        assert_eq!(orig, &copy);
+
+        assert_eq!(*copy, *orig);
+        assert_eq!(&copy, orig);
     }
 
     #[test]
@@ -220,30 +149,17 @@ mod tests {
 
     #[test]
     fn test_equality() {
-        let data = &HELLO_WORLD;
+        let data = HELLO_WORLD;
         let heap = NSStringClass.from_str("Hello, World!");
 
-        assert_eq!(
-            NSObjectProtocol::hash(*data),
-            NSObjectProtocol::hash(&*heap)
-        );
-
-        assert!(data.is_equal(&*heap));
-        assert!(heap.is_equal(*data));
-
-        assert_eq!(*data, &*heap);
-        assert_eq!(&*heap, *data);
-
-        assert_eq!(
-            NSObjectProtocol::hash(*data),
-            NSObjectProtocol::hash(&*heap)
-        );
+        assert_eq!(*data, *heap);
+        assert_eq!(*heap, *data);
 
         let mut data_hasher = AddHasher(0);
         let mut heap_hasher = AddHasher(0);
-        Hash::hash(data, &mut data_hasher);
-        Hash::hash(&*heap, &mut heap_hasher);
-        assert_eq!(data_hasher.finish(), heap_hasher.finish());
+        data.hash(&mut data_hasher);
+        heap.hash(&mut heap_hasher);
+        assert_eq!(data_hasher.0, heap_hasher.0);
     }
 
     #[test]

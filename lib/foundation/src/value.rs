@@ -1,19 +1,10 @@
 use crate::NSCopying;
-use core::hash::{Hash, Hasher};
 use core::ptr::NonNull;
-use objc4::{
-    extern_class, id, msg_send, Box, NSObjectClassInterface, NSObjectInterface, NSObjectProtocol,
-};
+use objc4::{extern_class, id, msg_send, Box, NSObjectClassInterface, NSObjectInterface};
 
 extern_class!(Foundation, pub NSValue, NSObject 'cls);
 
 pub trait NSValueInterface: NSObjectInterface + NSCopying<Result = Self> {}
-
-impl Hash for NSValue {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_usize(NSObjectProtocol::hash(self));
-    }
-}
 
 impl NSCopying for NSValue {
     type Result = Self;
@@ -193,17 +184,6 @@ pub trait NSNumberInterface: NSValueInterface {
     fn as_usize(&self) -> usize {
         msg_send!((usize)[self, unsignedIntegerValue])
     }
-
-    #[inline]
-    fn is_equal_to_number(&self, other: &impl NSNumberInterface) -> bool {
-        msg_send!((bool)[self, isEqualToNumber:(id)other])
-    }
-}
-
-impl Hash for NSNumber {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_usize(NSObjectProtocol::hash(self));
-    }
 }
 
 impl NSCopying for NSNumber {
@@ -215,7 +195,7 @@ where
     T: NSNumberInterface,
 {
     fn eq(&self, other: &T) -> bool {
-        self.is_equal_to_number(other)
+        msg_send!((bool)[self, isEqualToNumber:(id)other])
     }
 }
 
