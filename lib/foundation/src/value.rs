@@ -1,4 +1,5 @@
-use crate::NSCopying;
+use crate::{NSComparisonResult, NSCopying};
+use core::cmp::Ordering;
 use core::ptr::NonNull;
 use objc4::{extern_class, id, msg_send, Box, NSObjectClassInterface, NSObjectInterface};
 
@@ -119,7 +120,7 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     }
 }
 
-pub trait NSNumberInterface: NSValueInterface {
+pub trait NSNumberInterface: NSValueInterface + Ord + PartialOrd {
     #[inline]
     fn as_i8(&self) -> i8 {
         msg_send!((i8)[self, charValue])
@@ -199,9 +200,37 @@ where
     }
 }
 
+impl Ord for NSNumber {
+    fn cmp(&self, other: &Self) -> Ordering {
+        msg_send!((NSComparisonResult)[self, compare:(id)other]).into()
+    }
+}
+
+impl<T> PartialOrd<T> for NSNumber
+where
+    T: NSNumberInterface,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        Some(msg_send!((NSComparisonResult)[self, compare:(id)other]).into())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_compare() {
+        let one = NSNumberClass.from_i32(1);
+        let two = NSNumberClass.from_i32(2);
+
+        assert!(matches!(one.partial_cmp(&*two), Some(Ordering::Less)));
+        assert!(matches!(one.cmp(&*two), Ordering::Less));
+        assert!(matches!(one.partial_cmp(&*one), Some(Ordering::Equal)));
+        assert!(matches!(one.cmp(&*one), Ordering::Equal));
+        assert!(matches!(two.partial_cmp(&*one), Some(Ordering::Greater)));
+        assert!(matches!(two.cmp(&*one), Ordering::Greater));
+    }
 
     #[test]
     fn test_zero_and_one() {
@@ -247,6 +276,11 @@ mod tests {
 
                 for number2 in &numbers {
                     assert_eq!(number, number2);
+                    assert!(matches!(
+                        number.partial_cmp(&**number2),
+                        Some(Ordering::Equal)
+                    ));
+                    assert!(matches!(number.cmp(number2), Ordering::Equal));
                 }
             }
         }
