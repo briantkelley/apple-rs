@@ -1,4 +1,8 @@
-use crate::NSCopying;
+extern crate alloc;
+
+use crate::{NSComparisonResult, NSCopying};
+use alloc::string::{String, ToString};
+use core::cmp::Ordering;
 use core::ffi::{c_char, CStr};
 use core::fmt::{self, Debug, Formatter};
 use core::ptr::NonNull;
@@ -48,8 +52,14 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
     }
 }
 
-#[allow(clippy::len_without_is_empty)]
-pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
+pub trait NSStringInterface:
+    NSObjectInterface + NSCopying<Result = NSString> + Ord + PartialOrd + ToString
+{
+    #[inline]
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     #[inline]
     fn len(&self) -> usize {
         msg_send!((usize)[self, length])
@@ -62,7 +72,7 @@ pub trait NSStringInterface: NSObjectInterface + NSCopying<Result = NSString> {
     /// This method is unsafe because the returned reference is only valid through the current
     /// autorelease scope, which is not well-defined.
     #[inline]
-    unsafe fn as_c_str(&self) -> Option<&CStr> {
+    unsafe fn to_c_str(&self) -> Option<&CStr> {
         let str = msg_send!((*const c_char)[self, UTF8String]);
         if str.is_null() {
             None
@@ -77,12 +87,38 @@ impl NSCopying for NSString {
     type Result = Self;
 }
 
+impl Ord for NSString {
+    fn cmp(&self, other: &Self) -> Ordering {
+        msg_send!((NSComparisonResult)[self, compare:(id)other]).into()
+    }
+}
+
 impl<T> PartialEq<T> for NSString
 where
     T: NSStringInterface,
 {
     fn eq(&self, other: &T) -> bool {
         msg_send!((bool)[self, isEqualToString:(id)other])
+    }
+}
+
+impl<T> PartialOrd<T> for NSString
+where
+    T: NSStringInterface,
+{
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        Some(msg_send!((NSComparisonResult)[self, compare:(id)other]).into())
+    }
+}
+
+impl ToString for NSString {
+    fn to_string(&self) -> String {
+        // SAFETY: The CStr is copied into the String before the autorelease scope can change.
+        unsafe { self.to_c_str() }
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
     }
 }
 
@@ -139,12 +175,24 @@ mod tests {
     }
 
     #[test]
+    fn test_compare() {
+        string_literal!(static A: NSString = "A");
+        string_literal!(static B: NSString = "B");
+
+        assert!(matches!(A.partial_cmp(B), Some(Ordering::Less)));
+        assert!(matches!(A.cmp(B), Ordering::Less));
+        assert!(matches!(A.partial_cmp(A), Some(Ordering::Equal)));
+        assert!(matches!(A.cmp(A), Ordering::Equal));
+        assert!(matches!(B.partial_cmp(A), Some(Ordering::Greater)));
+        assert!(matches!(B.cmp(A), Ordering::Greater));
+    }
+
+    #[test]
     fn test_conversion() {
         let str = "Hello, World!";
         let string = NSStringClass.from_str(str);
 
-        assert_eq!(str.len(), 13);
-        assert_eq!(unsafe { string.as_c_str() }.unwrap().to_str().unwrap(), str);
+        assert_eq!(&string.to_string(), str);
     }
 
     #[test]
@@ -163,13 +211,21 @@ mod tests {
     }
 
     #[test]
+    fn test_len() {
+        string_literal!(static EMPTY: NSString = "");
+
+        assert_eq!(EMPTY.len(), 0);
+        assert_eq!(HELLO_WORLD.len(), 13);
+
+        assert!(EMPTY.is_empty());
+        assert!(!HELLO_WORLD.is_empty());
+    }
+
+    #[test]
     fn test_literal() {
         let str = &HELLO_WORLD;
 
         assert_eq!(str.len(), 13);
-        assert_eq!(
-            unsafe { str.as_c_str() }.unwrap().to_str().unwrap(),
-            "Hello, World!"
-        );
+        assert_eq!(&str.to_string(), "Hello, World!");
     }
 }

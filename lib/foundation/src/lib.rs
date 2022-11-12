@@ -61,6 +61,7 @@ mod macros;
 
 mod dictionary;
 mod object;
+mod runtime;
 mod string;
 #[cfg(test)]
 mod tests;
@@ -71,6 +72,7 @@ pub use dictionary::{
     NSMutableDictionaryClass, NSMutableDictionaryInterface,
 };
 pub use object::NSCopying;
+pub use runtime::NSComparisonResult;
 pub use string::{
     NSString, NSStringClass, NSStringClassInterface, NSStringEncoding, NSStringInterface,
     __CFConstantString, __CFConstantStringClassReference,

@@ -111,7 +111,7 @@ mod test {
 
         let value = dict.get(KEY).unwrap();
         assert_eq!(
-            unsafe { value.as_c_str() }.unwrap().to_str().unwrap(),
+            unsafe { value.to_c_str() }.unwrap().to_str().unwrap(),
             "value"
         );
 
