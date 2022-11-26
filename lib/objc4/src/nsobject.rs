@@ -1,5 +1,5 @@
 use crate::sys::{objc_alloc, objc_opt_new};
-use crate::{id, objc_class, objc_object, Box, Object};
+use crate::{objc_class, objc_object, Box, Object};
 use core::hash::Hash;
 use core::ptr::NonNull;
 

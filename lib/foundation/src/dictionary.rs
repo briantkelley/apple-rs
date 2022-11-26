@@ -15,9 +15,7 @@ pub trait NSDictionaryInterface:
 
     #[inline]
     fn get(&self, k: &Self::Key) -> Option<&Self::Value> {
-        let obj = msg_send!((id)[self, objectForKey:(id)k]).cast::<Self::Value>();
-        // SAFETY: If the dictionary contains the value, the pointer is guaranteed to be valid.
-        unsafe { obj.as_ref() }
+        msg_send!((claim nullable id)[self, objectForKey:(id)k])
     }
 
     #[inline]

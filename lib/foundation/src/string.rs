@@ -5,7 +5,6 @@ use alloc::string::{String, ToString};
 use core::cmp::Ordering;
 use core::ffi::{c_char, CStr};
 use core::fmt::{self, Debug, Formatter};
-use core::ptr::NonNull;
 use objc4::{
     extern_class, id, msg_send, objc_object, Box, NSObjectClassInterface, NSObjectInterface,
 };
@@ -30,12 +29,9 @@ pub trait NSStringClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_bytes(&self, buf: &[u8], encoding: NSStringEncoding) -> Option<Box<Self::Instance>> {
-        let obj = msg_send!((id)[self.alloc().as_ptr(), initWithBytes:(*const u8)buf.as_ptr()
-                                                                                 length:(usize)buf.len()
-                                                                               encoding:(usize)encoding as usize]);
-        // SAFETY: Objects retured by selectors beginning with ‘init’ consume their argument
-        // (selectors beginning with ‘alloc’ must also be released) and must be released.
-        NonNull::new(obj).map(|obj| unsafe { Box::with_transfer(obj) })
+        msg_send!((box_transfer nullable id)[self.alloc().as_ptr(), initWithBytes:(*const u8)buf.as_ptr()
+                                                                           length:(usize)buf.len()
+                                                                         encoding:(usize)encoding as usize])
     }
 
     /// Returns an `NSString` object initialized by copying the characters from a given slice of

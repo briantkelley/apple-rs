@@ -139,7 +139,7 @@ macro_rules! extern_class {
             $(where $($param : $ty),+)?
             {
                 fn eq(&self, other: &$crate::objc_object) -> bool {
-                    $crate::msg_send!((bool)[self, isEqual:(id)other])
+                    $crate::msg_send!((bool)[self, isEqual:($crate::id)other])
                 }
             }
 
@@ -191,7 +191,7 @@ macro_rules! extern_class {
                 $($(, $param : $ty)+)?
             {
                 fn eq(&self, other: &T) -> bool {
-                    $crate::msg_send!((bool)[self, isEqual:(id)other])
+                    $crate::msg_send!((bool)[self, isEqual:($crate::id)other])
                 }
             }
         }
@@ -237,7 +237,46 @@ macro_rules! msg_send {
         $arg
     };
 
-    // call __msg_send_helper
+    // memory management support
+    (@4 (box_retain nonnull id), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        $crate::msg_send!(@4 (box_retain nullable id), $self, $($cmd $(, ($($ty)+), $arg)?)+)
+            .unwrap()
+    };
+    (@4 (box_retain nullable id), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        core::ptr::NonNull::new(
+            $crate::__msg_send_helper!(@ ($crate::id), $self, $($cmd $(, ($($ty)+), $arg)?)+)
+        )
+        .map($crate::Box::with_retain)
+    };
+    (@4 (box_transfer nonnull id), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        $crate::msg_send!(@4 (box_transfer nullable id), $self, $($cmd $(, ($($ty)+), $arg)?)+)
+            .unwrap()
+    };
+    (@4 (box_transfer nullable id), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        core::ptr::NonNull::new(
+            $crate::__msg_send_helper!(@ ($crate::id), $self, $($cmd $(, ($($ty)+), $arg)?)+)
+        )
+        .map(|obj| {
+            // SAFETY: We assume the `box_transfer` contract is correct.
+            unsafe { $crate::Box::with_transfer(obj) }
+        })
+    };
+    (@4 (claim nonnull id), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        $crate::msg_send!(@4 (claim nullable id), $self, $($cmd $(, ($($ty)+), $arg)?)+)
+            .unwrap()
+    };
+    (@4 (claim nullable id), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        {
+            match $crate::__msg_send_helper!(@ ($crate::id), $self, $($cmd $(, ($($ty)+), $arg)?)+) {
+                obj if obj.is_null() => None,
+                // SAFETY: By contract, returned object pointers are always valid.
+                obj => Some(unsafe { &*(obj.cast()) })
+            }
+        }
+    };
+    (@4 (id), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        // memory management operation must be specified
+    };
     (@4 ($($ret:tt)+), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
         $crate::__msg_send_helper!(@ ($($ret)+), $self, $($cmd $(, ($($ty)+), $arg)?)+)
     };

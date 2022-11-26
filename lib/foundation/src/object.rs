@@ -1,5 +1,4 @@
-use core::ptr::NonNull;
-use objc4::{id, msg_send, Box, Object};
+use objc4::{msg_send, Box, Object};
 
 pub trait NSCopying: Object {
     /// The object type returned by the copy.
@@ -14,10 +13,6 @@ pub trait NSCopying: Object {
     /// method and returns `nil`, this binding method will panic.
     #[inline]
     fn copy(&self) -> Box<Self::Result> {
-        let obj = msg_send!((id)[self, copy]);
-        // SAFETY: Objects retured by selectors beginning with ‘copy’ must be released.
-        NonNull::new(obj)
-            .map(|obj| unsafe { Box::with_transfer(obj) })
-            .unwrap()
+        msg_send!((box_transfer nonnull id)[self, copy])
     }
 }

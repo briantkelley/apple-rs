@@ -39,12 +39,8 @@ extern_class!(Foundation, pub NSArray 'cls, NSObject 'cls);
 pub trait NSArrayClassInterface: NSObjectClassInterface {
     #[must_use]
     fn from_objects(&self, objects: &[id]) -> Box<NSArray> {
-        let obj = msg_send!((id)[self.alloc().as_ptr(), initWithObjects:(*const id)objects.as_ptr()
-                                                                  count:(usize)objects.len()]);
-        // SAFETY: Objects returned by selectors beginning with ‘alloc’ must be released.
-        // Panics: -initWithObjects: has a non-null return type annotation so the unwrap()
-        // panic if that specification is violated.
-        unsafe { Box::with_transfer(NonNull::new(obj).unwrap()) }
+        msg_send!((box_transfer nonnull id)[self.alloc().as_ptr(), initWithObjects:(*const id)objects.as_ptr()
+                                                                             count:(usize)objects.len()])
     }
 }
 
@@ -56,9 +52,7 @@ pub trait NSArrayInterface: NSObjectInterface {
 
     #[must_use]
     fn object_at_index(&self, index: usize) -> &objc_object {
-        let obj = msg_send!((id)[self, objectAtIndex:(usize)index]);
-        // SAFETY: `NSArray` cannot store `nil` pointers.
-        unsafe { &*obj }
+        msg_send!((claim nonnull id)[self, objectAtIndex:(usize)index])
     }
 }
 ```

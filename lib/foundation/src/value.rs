@@ -1,6 +1,5 @@
 use crate::{NSComparisonResult, NSCopying};
 use core::cmp::Ordering;
-use core::ptr::NonNull;
 use objc4::{extern_class, id, msg_send, Box, NSObjectClassInterface, NSObjectInterface};
 
 extern_class!(Foundation, pub NSValue, NSObject 'cls);
@@ -18,105 +17,91 @@ pub trait NSNumberClassInterface: NSObjectClassInterface {
     #[inline]
     #[must_use]
     fn from_i8(&self, value: i8) -> Box<Self::Instance> {
-        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithChar:(i8)value])).unwrap())
+        msg_send!((box_retain nonnull id)[self, numberWithChar:(i8)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_u8(&self, value: u8) -> Box<Self::Instance> {
-        Box::with_retain(
-            NonNull::new(msg_send!((id)[self, numberWithUnsignedChar:(u8)value])).unwrap(),
-        )
+        msg_send!((box_retain nonnull id)[self, numberWithUnsignedChar:(u8)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_i16(&self, value: i16) -> Box<Self::Instance> {
-        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithShort:(i16)value])).unwrap())
+        msg_send!((box_retain nonnull id)[self, numberWithShort:(i16)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_u16(&self, value: u16) -> Box<Self::Instance> {
-        Box::with_retain(
-            NonNull::new(msg_send!((id)[self, numberWithUnsignedShort:(u16)value])).unwrap(),
-        )
+        msg_send!((box_retain nonnull id)[self, numberWithUnsignedShort:(u16)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_i32(&self, value: i32) -> Box<Self::Instance> {
-        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithInt:(i32)value])).unwrap())
+        msg_send!((box_retain nonnull id)[self, numberWithInt:(i32)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_u32(&self, value: u32) -> Box<Self::Instance> {
-        Box::with_retain(
-            NonNull::new(msg_send!((id)[self, numberWithUnsignedInt:(u32)value])).unwrap(),
-        )
+        msg_send!((box_retain nonnull id)[self, numberWithUnsignedInt:(u32)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_i64(&self, value: i64) -> Box<Self::Instance> {
-        Box::with_retain(
-            NonNull::new(msg_send!((id)[self, numberWithLongLong:(i64)value])).unwrap(),
-        )
+        msg_send!((box_retain nonnull id)[self, numberWithLongLong:(i64)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_u64(&self, value: u64) -> Box<Self::Instance> {
-        Box::with_retain(
-            NonNull::new(msg_send!((id)[self, numberWithUnsignedLongLong:(u64)value])).unwrap(),
-        )
+        msg_send!((box_retain nonnull id)[self, numberWithUnsignedLongLong:(u64)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_f32(&self, value: f32) -> Box<Self::Instance> {
-        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithFloat:(f32)value])).unwrap())
+        msg_send!((box_retain nonnull id)[self, numberWithFloat:(f32)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_f64(&self, value: f64) -> Box<Self::Instance> {
-        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithDouble:(f64)value])).unwrap())
+        msg_send!((box_retain nonnull id)[self, numberWithDouble:(f64)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_bool(&self, value: bool) -> Box<Self::Instance> {
-        Box::with_retain(NonNull::new(msg_send!((id)[self, numberWithBool:(bool)value])).unwrap())
+        msg_send!((box_retain nonnull id)[self, numberWithBool:(bool)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_isize(&self, value: isize) -> Box<Self::Instance> {
-        Box::with_retain(
-            NonNull::new(msg_send!((id)[self, numberWithInteger:(isize)value])).unwrap(),
-        )
+        msg_send!((box_retain nonnull id)[self, numberWithInteger:(isize)value])
     }
 
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     #[must_use]
     fn from_usize(&self, value: usize) -> Box<Self::Instance> {
-        Box::with_retain(
-            NonNull::new(msg_send!((id)[self, numberWithUnsignedInteger:(usize)value])).unwrap(),
-        )
+        msg_send!((box_retain nonnull id)[self, numberWithUnsignedInteger:(usize)value])
     }
 }
 
