@@ -205,20 +205,22 @@ macro_rules! extern_class {
 #[macro_export]
 macro_rules! msg_send {
     ([$self:expr, $cmd:ident]) => {
-        $crate::msg_send!(@1 (), $self, $cmd)
+        $crate::msg_send!(@1 (()), $self, $cmd)
     };
     ([$self:expr, $($cmd:ident : ($($ty:tt)+) $arg:expr)+]) => {
-        $crate::msg_send!(@1 (), $self, $($cmd, ($($ty)+), $arg)+)
+        $crate::msg_send!(@1 (()), $self, $($cmd, ($($ty)+), $arg)+)
     };
-    (($ret:ty)[$self:expr, $cmd:ident]) => {
-        $crate::msg_send!(@1 $ret, $self, $cmd)
+    (($($ret:tt)+)[$self:expr, $cmd:ident]) => {
+        $crate::msg_send!(@1 ($($ret)+), $self, $cmd)
     };
-    (($ret:ty)[$self:expr, $($cmd:ident : ($($ty:tt)+) $arg:expr)+]) => {
-        $crate::msg_send!(@1 $ret, $self, $($cmd, ($($ty)+), $arg)+)
+    (($($ret:tt)+)[$self:expr, $($cmd:ident : ($($ty:tt)+) $arg:expr)+]) => {
+        $crate::msg_send!(@1 ($($ret)+), $self, $($cmd, ($($ty)+), $arg)+)
     };
-    (@1 $ret:ty, $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
-        $crate::__msg_send_helper!(@ $ret, $self, $($cmd $(, ($($ty)+), $arg)?)+)
+    (@1 ($($ret:tt)+), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        $crate::msg_send!(@4 ($($ret)+), $self, $($cmd $(, ($($ty)+), $arg)?)+)
     };
+
+    // __msg_send_helper helpers
     (@2 $cmd:ident) => {
         stringify!($cmd)
     };
@@ -234,20 +236,25 @@ macro_rules! msg_send {
     (@3 $arg:expr, $($ty:tt)+) => {
         $arg
     };
+
+    // call __msg_send_helper
+    (@4 ($($ret:tt)+), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+        $crate::__msg_send_helper!(@ ($($ret)+), $self, $($cmd $(, ($($ty)+), $arg)?)+)
+    };
 }
 
 #[cfg(target_arch = "aarch64")]
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __msg_send_helper {
-    (@ $ret:ty, $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
+    (@ ($($ret:tt)+), $self:expr, $($cmd:ident $(, ($($ty:tt)+), $arg:expr)?)+) => {
         // SAFETY: Assume the user of the macro provided the correct return type, receiver type,
         // selector instance, and argument types.
         unsafe {
             extern "C" {
                 #[allow(clashing_extern_declarations)]
                 #[link_name = concat!("objc_msgSend$", $crate::msg_send!(@2 $($cmd $(, ($($ty)+))?),+))]
-                fn objc_msgSend(receiver: $crate::id, _cmd: *const u8 $($(, $cmd: $($ty)+)?)+) -> $ret;
+                fn objc_msgSend(receiver: $crate::id, _cmd: *const u8 $($(, $cmd: $($ty)+)?)+) -> $($ret)+;
             }
             core::arch::asm!(
                 "    .pushsection __DATA,__objc_imageinfo,regular,no_dead_strip",
@@ -269,7 +276,7 @@ macro_rules! __msg_send_helper {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __msg_send_helper {
-    (@ $ret:ty, $self:expr, $($cmd:ident $(, $ty:ty, $arg:expr)?)+) => {
+    (@ ($($ret:tt)+), $self:expr, $($cmd:ident $(, $ty:ty, $arg:expr)?)+) => {
         // SAFETY: Assume the user of the macro provided the correct return type, receiver type,
         // selector instance, and argument types.
         unsafe {
@@ -300,7 +307,7 @@ macro_rules! __msg_send_helper {
             let untyped: unsafe extern "C" fn() = objc_msgSend;
             let typed = core::mem::transmute::<
                 _,
-                unsafe extern "C" fn($crate::id, *const u8 $($(, $ty)?)+) -> $ret,
+                unsafe extern "C" fn($crate::id, *const u8 $($(, $ty)?)+) -> $($ret)+,
             >(untyped);
             #[allow(trivial_casts)]
             typed($self as *const _ as *mut $crate::objc_object, cmd $($(, $arg)?)+)
