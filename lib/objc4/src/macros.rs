@@ -41,14 +41,15 @@ macro_rules! extern_class {
             $vis static [< $class Class >]: &[< $class ClassType >] = unsafe { &[< _ $class Class >] };
 
             #[allow(missing_copy_implementations, missing_docs)]
-            #[repr(transparent)]
-            $vis struct [< $class ClassType >] (
-                $crate::objc_class,
-            );
+            #[repr(C)]
+            $vis struct [< $class ClassType >]([u8; 0]);
 
             impl core::fmt::Debug for [< $class ClassType >] {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                    self.0.fmt(f)
+                    let cls: *const _ = self;
+                    // SAFETY: Upcast to the base class type
+                    let cls: &$crate::objc_class = unsafe { &*cls.cast() };
+                    cls.fmt(f)
                 }
             }
         }
@@ -66,8 +67,7 @@ macro_rules! extern_class {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 let obj: *const _ = self;
                 let obj: *const $crate::objc_object = obj.cast();
-                // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid
-                // pointer to an Objective-C object.
+                // SAFETY: The reference is guaranteed to be a valid pointer.
                 unsafe { &*obj }.fmt(f)
             }
         }

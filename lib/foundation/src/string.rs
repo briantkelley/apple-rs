@@ -143,8 +143,7 @@ impl Debug for __CFConstantString {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let obj: *const _ = self;
         let obj: *const objc_object = obj.cast();
-        // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid pointer to an
-        // Objective-C object.
+        // SAFETY: The reference is guaranteed to be a valid pointer.
         unsafe { &*obj }.fmt(f)
     }
 }

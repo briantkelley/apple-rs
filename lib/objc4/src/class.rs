@@ -1,5 +1,5 @@
 use crate::sys::{class_getName, objc_class};
-use crate::Object;
+use crate::{objc_object, Object};
 use core::cmp::{Eq, PartialEq};
 use core::ffi::CStr;
 use core::fmt::{self, Debug, Formatter};
@@ -8,8 +8,7 @@ impl objc_class {
     #[must_use]
     pub fn name(&self) -> &CStr {
         let cls: *const _ = self;
-        // SAFETY: `cls` is derived from a reference so it is guaranteed to be a valid pointer to an
-        // Objective-C class.
+        // SAFETY: The reference is guaranteed to be a valid pointer.
         let name = unsafe { class_getName(cls as *mut _) }.as_ptr();
         // SAFETY: `class_getName()` is guaranteed to return a valid C-style string.
         unsafe { CStr::from_ptr(name) }
@@ -18,8 +17,10 @@ impl objc_class {
 
 impl Debug for objc_class {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let name = self.name().to_str().map_err(|_| fmt::Error)?;
-        f.write_str(name)
+        let cls: *const _ = self;
+        // SAFETY: objc_class is also an objc_object.
+        let obj: &objc_object = unsafe { &*cls.cast() };
+        obj.fmt(f)
     }
 }
 
@@ -42,7 +43,7 @@ mod tests {
 
     #[link(name = "Foundation", kind = "framework")]
     extern "C" {
-        // From NSString.h
+        // From <Foundation/NSString.h>
         static NSCharacterConversionException: id;
     }
 

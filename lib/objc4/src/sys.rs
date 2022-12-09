@@ -1,15 +1,15 @@
-use core::ffi::c_char;
+use core::ffi::{c_char, c_void};
 use core::mem::size_of;
 use core::ptr::NonNull;
 
 //
-// $ISYSROOT/objc/objc.h
+// <objc/objc.h>
 //
 
 #[allow(missing_copy_implementations, non_camel_case_types)]
 #[repr(C)]
 pub struct objc_class {
-    // The struct must have at least one field to be FFI safe. `$OBJC4/runtime/objc-runtime-new.h`
+    // The struct must have at least one field to be FFI safe. `"$OBJC4/runtime/objc-runtime-new.h"`
     // shows this type as inheriting from `objc_object`, so emulate that to create a proper C type.
     isa: [u8; size_of::<usize>()],
 }
@@ -25,9 +25,7 @@ pub type Class = *mut objc_class;
 
 #[allow(missing_copy_implementations, non_camel_case_types)]
 #[repr(C)]
-pub struct objc_object {
-    isa: [u8; size_of::<usize>()],
-}
+pub struct objc_object([u8; 0]);
 
 #[allow(non_camel_case_types)]
 pub type id = *mut objc_object;
@@ -38,7 +36,7 @@ extern "C" {
 }
 
 //
-// $ISYSROOT/objc/runtime.h
+// <objc/runtime.h>
 //
 
 #[link(name = "objc")]
@@ -46,10 +44,12 @@ extern "C" {
     pub(super) fn object_getClass(obj: id) -> Class;
 
     pub(super) fn class_getName(cls: Class) -> NonNull<c_char>;
+
+    pub(super) fn sel_registerName(str: *const c_char) -> NonNull<c_void>;
 }
 
 //
-// $OBJC4/runtime/objc-internal.h
+// "$OBJC4/runtime/objc-internal.h"
 //
 
 // These symbols aren't explicitly defined in any public header, but they are emitted by clang when

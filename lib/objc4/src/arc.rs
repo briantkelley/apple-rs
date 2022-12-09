@@ -109,7 +109,8 @@ where
     T: Object,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.obj.as_ptr().fmt(f)
+        // SAFETY: An object pointer owned by `Arc<T>` is guaranteed to be valid.
+        unsafe { &*self.obj.as_ptr() }.fmt(f)
     }
 }
 

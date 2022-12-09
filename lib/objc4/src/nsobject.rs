@@ -38,8 +38,7 @@ pub trait NSObjectClassInterface {
     #[must_use]
     fn alloc(&self) -> NonNull<objc_object> {
         let cls: *const _ = self;
-        // SAFETY: `self` is a reference so it is guaranteed to be a valid pointer to an Objective-C
-        // class object.
+        // SAFETY: The reference is guaranteed to be a valid pointer.
         NonNull::new(unsafe { objc_alloc(cls as *mut _) }).unwrap()
     }
 
@@ -59,7 +58,7 @@ pub trait NSObjectClassInterface {
     #[must_use]
     fn new(&self) -> Box<Self::Instance> {
         let cls: *const _ = self;
-        // SAFETY: The trait implementation guarantees `cls` is a valid Objective-C class object.
+        // SAFETY: The reference is guaranteed to be a valid pointer.
         let obj = NonNull::new(unsafe { objc_opt_new(cls as *mut _) }).unwrap();
         // SAFETY: Objects retured by selectors beginning with ‘new’ must be released.
         unsafe { Box::with_transfer(obj) }

@@ -1,5 +1,5 @@
-use crate::sys::{objc_class, objc_object, object_getClass, object_getClassName};
-use core::ffi::CStr;
+use crate::sys::{objc_class, objc_object, object_getClass, object_getClassName, sel_registerName};
+use core::ffi::{c_char, c_void, CStr};
 use core::fmt::{self, Debug, Formatter};
 
 /// An trait that serves as the base type for Objective-C objects.
@@ -8,8 +8,7 @@ use core::fmt::{self, Debug, Formatter};
 pub trait Object: Debug {
     fn class(&self) -> &'static objc_class {
         let obj: *const _ = self;
-        // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid pointer to an
-        // Objective-C object.
+        // SAFETY: The reference is guaranteed to be a valid pointer.
         let cls = unsafe { object_getClass(obj as *mut _) };
         // SAFETY: `object_getClass()` guarantees non-null result for any valid Objective-C object.
         unsafe { &*cls }
@@ -17,8 +16,7 @@ pub trait Object: Debug {
 
     fn class_name(&self) -> &'static CStr {
         let obj: *const _ = self;
-        // SAFETY: `obj` is derived from a reference so it is guaranteed to be a valid pointer to an
-        // Objective-C object.
+        // SAFETY: The reference is guaranteed to be a valid pointer.
         let name = unsafe { object_getClassName(obj as *mut _) }.as_ptr();
         // SAFETY: `object_getClassName()` is guaranteed to return a valid C-style string.
         unsafe { CStr::from_ptr(name) }
@@ -27,10 +25,27 @@ pub trait Object: Debug {
 
 impl Debug for objc_object {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let class_name = self.class_name().to_str().map_err(|_| fmt::Error)?;
-        let obj: *const _ = self;
+        // TODO: Use a compile-time constant
+        let sel = unsafe { sel_registerName("debugDescription\0".as_ptr().cast()) };
 
-        f.write_fmt(format_args!("<{class_name}: {obj:p}>"))
+        // -debugDescription and -description return NSString, which is implemented by Foundation,
+        // not libobjc. This relies on the fact the dependency inversion is resolved at runtime.
+
+        // The API notes indicate both `-debugDescription` and `-description` return non-nil values.
+        let description: &Self = if msg_send!((bool)[self, respondsToSelector:(*const c_void)sel.as_ptr()])
+        {
+            msg_send!((claim nonnull id)[self, debugDescription])
+        } else {
+            msg_send!((claim nonnull id)[self, description])
+        };
+
+        let str = msg_send!((*const c_char)[description, UTF8String]);
+        if str.is_null() {
+            None::<Self>.fmt(f)
+        } else {
+            // SAFETY: str is guaranteed to be a valid C string pointer.
+            unsafe { CStr::from_ptr(str) }.fmt(f)
+        }
     }
 }
 
