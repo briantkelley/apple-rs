@@ -1,4 +1,4 @@
-# objc4_foundation
+# foundation
 
 Idiomatic Rust bindings for Apple's Foundation framework.
 

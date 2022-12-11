@@ -10,7 +10,7 @@ keywords = [
     "objective-c",
 ]
 license.workspace = true
-name = "objc4_foundation"
+name = "foundation"
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true

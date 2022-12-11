@@ -1,5 +1,5 @@
 /*!
-# `objc4_foundation`
+# foundation
 
 Idiomatic Rust bindings for Apple's Foundation framework.
 
@@ -12,7 +12,7 @@ The crate includes support for creating and using instances of:
 * `NSString` (including compile-time constants)
 
 ```
-# use objc4_foundation::*;
+# use foundation::*;
 string_literal!(static LOCATION: NSString = "location"); // compile-time constant
 let location = NSStringClass.from_str("Bellevue");       // heap allocated
 

@@ -10,7 +10,6 @@ keywords = [
 ]
 license.workspace = true
 name = "objc4"
-readme = "../../README.md"
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
