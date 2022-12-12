@@ -1,0 +1,21 @@
+[package]
+authors.workspace = true
+categories.workspace = true
+description = "Idiomatic Rust bindings to libdispatch."
+edition.workspace = true
+keywords = [
+    "apple",
+    "dispatch",
+    "gcd",
+    "iOS",
+    "macOS",
+]
+license.workspace = true
+name = "dispatch"
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+darwin = { path = "../darwin" }
+objc4 = { path = "../objc4" }
