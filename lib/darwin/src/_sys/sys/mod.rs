@@ -1,3 +1,1 @@
-mod qos;
-
-pub(crate) use qos::*;
+pub(crate) mod qos;

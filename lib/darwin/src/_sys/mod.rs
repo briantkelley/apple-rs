@@ -6,6 +6,4 @@
 //! visibility. But, the Darwin Clang module contains a `sys` submodule, which conflicts with this
 //! convention. So, for this crate, the system interface is available in this `_sys` module.
 
-mod sys;
-
-pub(crate) use sys::*;
+pub(crate) mod sys;

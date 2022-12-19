@@ -1,4 +1,4 @@
-use crate::_sys::{
+use crate::_sys::sys::qos::{
     QOS_CLASS_BACKGROUND, QOS_CLASS_DEFAULT, QOS_CLASS_USER_INITIATED, QOS_CLASS_USER_INTERACTIVE,
     QOS_CLASS_UTILITY,
 };
