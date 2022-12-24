@@ -7,3 +7,4 @@
 //! convention. So, for this crate, the system interface is available in this `_sys` module.
 
 pub(crate) mod sys;
+pub(crate) mod unistd;
