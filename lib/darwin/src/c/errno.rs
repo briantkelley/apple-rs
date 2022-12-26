@@ -1,4 +1,4 @@
-use crate::_sys::sys::errno::{self, __error};
+use crate::_sys::c::errno::{self, __error};
 use core::num::NonZeroI32;
 
 #[derive(Clone, Copy, Debug)]

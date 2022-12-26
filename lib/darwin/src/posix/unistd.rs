@@ -1,5 +1,5 @@
-use crate::_sys::unistd::{confstr, _CS_DARWIN_USER_TEMP_DIR};
-use crate::errno;
+use crate::_sys::posix::unistd::{confstr, _CS_DARWIN_USER_TEMP_DIR};
+use crate::c::errno;
 use core::num::{NonZeroI32, NonZeroUsize};
 use core::ptr;
 
@@ -40,7 +40,7 @@ impl ConfigurationString {
 #[cfg(test)]
 mod tests {
     use super::ConfigurationString;
-    use crate::errno::Error;
+    use crate::c::errno::Error;
     use core::mem;
 
     const NAMES: [ConfigurationString; 1] = [ConfigurationString::TemporaryDirectory];
