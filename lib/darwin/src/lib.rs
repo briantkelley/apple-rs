@@ -42,5 +42,6 @@ Idiomatic Rust bindings to Apple's Darwin Clang module (located at `$SDKROOT/usr
 mod _sys;
 
 pub mod c;
+pub mod io;
 pub mod posix;
 pub mod sys;
