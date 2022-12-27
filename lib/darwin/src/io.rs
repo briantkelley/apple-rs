@@ -1,5 +1,12 @@
 use crate::_sys::posix::unistd::close;
 use core::ffi::c_int;
+use core::marker::PhantomData;
+
+/// An interface to borrow the file descriptor from the underlying object.
+pub trait AsFd {
+    /// Borrows the file descriptor.
+    fn as_fd(&self) -> BorrowedFd<'_>;
+}
 
 /// An interface to construct an owner type for a raw file descriptor.
 pub trait FromRawFd {
@@ -12,6 +19,14 @@ pub trait FromRawFd {
     unsafe fn from_raw_fd(fd: c_int) -> Self;
 }
 
+/// A non-owned file descriptor.
+#[repr(transparent)]
+#[derive(Debug)]
+pub struct BorrowedFd<'fd> {
+    _fd: c_int,
+    _phantom: PhantomData<&'fd OwnedFd>,
+}
+
 /// An owned file descriptor.
 ///
 /// This closes the file descriptor on drop.
@@ -19,6 +34,15 @@ pub trait FromRawFd {
 #[derive(Debug)]
 pub struct OwnedFd {
     fd: c_int,
+}
+
+impl AsFd for OwnedFd {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        BorrowedFd {
+            _fd: self.fd,
+            _phantom: PhantomData,
+        }
+    }
 }
 
 impl Drop for OwnedFd {
