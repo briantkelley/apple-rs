@@ -39,7 +39,7 @@ impl OpenOptions {
         let path = path.as_ref().as_ptr();
         let oflag = self.oflag();
 
-        // SAFETY: path is guaranteed to be a valid, nul-terminated C style string and open() will
+        // SAFETY: path is guaranteed to be a valid, nul-terminated C-style string and open() will
         // not write to path.
         check_retry(|| unsafe { open(path, oflag) })
             // SAFETY: fd is opened, the unique owner of the resource, and must be `close(2)`ed.

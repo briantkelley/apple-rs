@@ -4,6 +4,7 @@ use core::num::NonZeroI32;
 #[derive(Clone, Copy, Debug)]
 #[repr(i32)]
 pub enum Error {
+    NotPermitted = errno::EPERM,
     NotFound = errno::ENOENT,
     Interrupted = errno::EINTR,
     IO = errno::EIO,
@@ -13,6 +14,7 @@ pub enum Error {
     OutOfMemory = errno::ENOMEM,
     NoAccess = errno::EACCES,
     BadAddress = errno::EFAULT,
+    ResourceBusy = errno::EBUSY,
     AlreadyExists = errno::EEXIST,
     NotADirectory = errno::ENOTDIR,
     IsADirectory = errno::EISDIR,
@@ -25,6 +27,7 @@ pub enum Error {
     WouldBlock = errno::EAGAIN,
     FilesystemLoop = errno::ELOOP,
     InvalidFilename = errno::ENAMETOOLONG,
+    DirectoryNotEmpty = errno::ENOTEMPTY,
     FilesystemQuotaExceeded = errno::EDQUOT,
     Overflow = errno::EOVERFLOW,
     IllegalByteSequence = errno::EILSEQ,
