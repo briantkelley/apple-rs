@@ -16,6 +16,7 @@ pub enum Error {
     BadAddress = errno::EFAULT,
     ResourceBusy = errno::EBUSY,
     AlreadyExists = errno::EEXIST,
+    CrossesDevices = errno::EXDEV,
     NotADirectory = errno::ENOTDIR,
     IsADirectory = errno::EISDIR,
     InvalidArgument = errno::EINVAL,

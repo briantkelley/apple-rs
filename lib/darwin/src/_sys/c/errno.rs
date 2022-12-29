@@ -12,6 +12,7 @@ pub(crate) const EACCES: c_int = 13;
 pub(crate) const EFAULT: c_int = 14;
 pub(crate) const EBUSY: c_int = 16;
 pub(crate) const EEXIST: c_int = 17;
+pub(crate) const EXDEV: c_int = 18;
 pub(crate) const ENOTDIR: c_int = 20;
 pub(crate) const EISDIR: c_int = 21;
 pub(crate) const EINVAL: c_int = 22;
