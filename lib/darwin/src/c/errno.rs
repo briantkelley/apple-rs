@@ -1,7 +1,9 @@
 use crate::_sys::c::errno::{self, __error};
+use crate::function_id::FunctionID;
 use core::num::NonZeroI32;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 #[repr(i32)]
 pub enum Error {
     NotPermitted = errno::EPERM,
@@ -33,6 +35,18 @@ pub enum Error {
     Overflow = errno::EOVERFLOW,
     IllegalByteSequence = errno::EILSEQ,
     NotSupported = errno::EOPNOTSUPP,
+}
+
+impl PartialEq<Error> for i32 {
+    fn eq(&self, other: &Error) -> bool {
+        *self == *other as Self
+    }
+}
+
+impl PartialEq<i32> for Error {
+    fn eq(&self, other: &i32) -> bool {
+        *self as i32 == *other
+    }
 }
 
 impl TryFrom<NonZeroI32> for Error {
@@ -75,24 +89,65 @@ impl TryFrom<NonZeroI32> for Error {
     }
 }
 
+/// A pair that contains an identifier for the function that failed and the error number that
+/// indicates the cause.
+#[derive(Clone, Copy, Debug)]
+pub struct AttributedError {
+    errno: NonZeroI32,
+    function_id: FunctionID,
+}
+
+impl AttributedError {
+    pub(crate) fn new(function_id: FunctionID) -> Self {
+        Self {
+            errno: get().unwrap(),
+            function_id,
+        }
+    }
+
+    pub(crate) const fn with_errno(function_id: FunctionID, errno: NonZeroI32) -> Self {
+        Self { errno, function_id }
+    }
+
+    pub(crate) fn with_error(function_id: FunctionID, error: Error) -> Self {
+        Self {
+            errno: NonZeroI32::new(error as _).unwrap(),
+            function_id,
+        }
+    }
+
+    /// The error number (code) returned by the function call.
+    #[must_use]
+    pub const fn errno(&self) -> i32 {
+        self.errno.get()
+    }
+
+    /// An identifier for the system library function that failed, which can be used to produce
+    /// error messages, to inform an error recovery strategy, and/or for logging.
+    #[must_use]
+    pub const fn function_id(&self) -> FunctionID {
+        self.function_id
+    }
+}
+
 #[must_use]
 pub fn get() -> Option<NonZeroI32> {
-    // SAFETY: __error() is guaranteed to return a thread-local, non-null pointer.
+    // SAFETY: __error() is guaranteed to return a thread-local non-null pointer.
     NonZeroI32::new(unsafe { *__error() })
 }
 
 /// Set the last error number visible to the current thread.
 pub fn set(errno: Option<NonZeroI32>) {
     let errno = errno.map_or(0, NonZeroI32::get);
-    // SAFETY: __error() is guaranteed to return a thread-specific non-null pointer.
+    // SAFETY: __error() is guaranteed to return a thread-local non-null pointer.
     unsafe { *__error() = errno };
 }
 
 /// Returns the value of [`get()`] as an [`Err`] if `result == -1`, otherwise returns the value of
 /// `result` as [`Ok`].
-pub(crate) fn check(result: i32) -> Result<i32, NonZeroI32> {
+pub(crate) fn check(function_id: FunctionID, result: i32) -> Result<i32, AttributedError> {
     if result == -1 {
-        Err(get().unwrap())
+        Err(AttributedError::new(function_id))
     } else {
         Ok(result)
     }
@@ -100,10 +155,13 @@ pub(crate) fn check(result: i32) -> Result<i32, NonZeroI32> {
 
 /// Calls `f` and validates the result with [`check()`]. Continues to call `f` while the result is
 /// the [`Err`] variant with a value of [`Error::Interrupted`]. Otherwise returns the result.
-pub(crate) fn check_retry(mut f: impl FnMut() -> i32) -> Result<i32, NonZeroI32> {
+pub(crate) fn check_retry(
+    function_id: FunctionID,
+    mut f: impl FnMut() -> i32,
+) -> Result<i32, AttributedError> {
     loop {
-        match check(f()) {
-            Err(e) if e.get() == Error::Interrupted as _ => {}
+        match check(function_id, f()) {
+            Err(e) if e.errno() == Error::Interrupted => {}
             result => return result,
         }
     }

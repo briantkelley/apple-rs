@@ -1,8 +1,8 @@
 use crate::_sys::posix::fcntl::{open, O_ACCMODE, O_CLOEXEC, O_RDONLY, O_RDWR, O_WRONLY};
-use crate::c::errno::check_retry;
+use crate::c::errno::{check_retry, AttributedError};
+use crate::function_id::FunctionID;
 use crate::io::{FromRawFd, OwnedFd};
 use core::ffi::CStr;
-use core::num::NonZeroI32;
 
 /// Specifies the type of I/O access granted to the file.
 #[derive(Clone, Copy, Debug)]
@@ -40,13 +40,13 @@ impl Open {
         self.set_flag_enabled(O_CLOEXEC, close_on_exec)
     }
 
-    pub fn path(self, path: impl AsRef<CStr>) -> Result<OwnedFd, NonZeroI32> {
+    pub fn path(self, path: impl AsRef<CStr>) -> Result<OwnedFd, AttributedError> {
         let path = path.as_ref().as_ptr();
         let oflag = self.oflag;
 
         // SAFETY: path is guaranteed to be a valid, nul-terminated C-style string and open() will
         // not write to path.
-        check_retry(|| unsafe { open(path, oflag) })
+        check_retry(FunctionID::open, || unsafe { open(path, oflag) })
             // SAFETY: fd is opened, the unique owner of the resource, and must be `close(2)`ed.
             .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
     }
@@ -90,7 +90,7 @@ mod tests {
         let path = CStr::from_bytes_with_nul(b"/this/path/does/not/exist\0").unwrap();
         let result = Open::new(AccessMode::ReadOnly).path(path);
 
-        assert_eq!(result.unwrap_err().get(), Error::NotFound as _);
+        assert_eq!(result.unwrap_err().errno(), Error::NotFound);
     }
 
     #[test]
@@ -99,7 +99,6 @@ mod tests {
         let result = Open::new(AccessMode::ReadOnly).path(path);
 
         assert!(matches!(result, Ok(_)));
-        drop(result);
     }
 
     #[test]
@@ -108,6 +107,5 @@ mod tests {
         let result = Open::new(AccessMode::WriteOnly).path(path);
 
         assert!(matches!(result, Ok(_)));
-        drop(result);
     }
 }

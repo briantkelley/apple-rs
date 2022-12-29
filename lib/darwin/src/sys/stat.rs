@@ -3,10 +3,10 @@ use crate::_sys::sys::types::{
     S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK, S_IRGRP, S_IROTH,
     S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR,
 };
-use crate::c::errno::check_retry;
+use crate::c::errno::{check_retry, AttributedError};
+use crate::function_id::FunctionID;
 use crate::io::AsFd;
 use core::mem::MaybeUninit;
-use core::num::NonZeroI32;
 use core::ops::BitOr;
 
 /// Information about a file.
@@ -46,7 +46,7 @@ pub struct Permissions(u16);
 
 #[allow(clippy::len_without_is_empty)] // not a container type
 impl Metadata {
-    pub fn from_fd(fd: &impl AsFd) -> Result<Self, NonZeroI32> {
+    pub fn from_fd(fd: &impl AsFd) -> Result<Self, AttributedError> {
         let mut metadata = Self {
             // SAFETY: stat is a scalar structure that is safe to zero-initialize.
             stat: unsafe { MaybeUninit::<stat>::zeroed().assume_init() },
@@ -57,7 +57,9 @@ impl Metadata {
 
         // SAFETY: The file descriptor and the buffer are guaranteed to be valid. The operating
         // system will not write outside the bounds of the buffer.
-        let _ = check_retry(|| unsafe { fstat(fd.as_fd(), &mut metadata.stat) })?;
+        let _ = check_retry(FunctionID::fstat, || unsafe {
+            fstat(fd.as_fd(), &mut metadata.stat)
+        })?;
 
         Ok(metadata)
     }

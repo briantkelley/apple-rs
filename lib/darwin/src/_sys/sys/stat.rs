@@ -34,3 +34,14 @@ pub(crate) const DEFFILEMODE: mode_t = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S
 extern "C" {
     pub(crate) fn fstat(fildes: BorrowedFd<'_>, buf: &mut stat) -> c_int;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::stat;
+    use core::mem::size_of;
+
+    #[test]
+    fn size() {
+        assert_eq!(size_of::<stat>(), 144);
+    }
+}

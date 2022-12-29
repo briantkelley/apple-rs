@@ -1,8 +1,8 @@
 use crate::_sys::sys::clonefile::{fclonefileat, CLONE_ACL, CLONE_NOFOLLOW, CLONE_NOOWNERCOPY};
-use crate::c::errno::check;
+use crate::c::errno::{check, AttributedError};
+use crate::function_id::FunctionID;
 use crate::io::AsFd;
 use core::ffi::CStr;
-use core::num::NonZeroI32;
 
 #[allow(missing_copy_implementations)]
 #[derive(Debug, Default)]
@@ -31,7 +31,7 @@ impl Clone {
         source: &impl AsFd,
         destination_directory: &impl AsFd,
         destination_file_name: impl AsRef<CStr>,
-    ) -> Result<(), NonZeroI32> {
+    ) -> Result<(), AttributedError> {
         let srcfd = source.as_fd();
         let dst_dirfd = destination_directory.as_fd();
         let dst = destination_file_name.as_ref().as_ptr();
@@ -40,7 +40,9 @@ impl Clone {
         // SAFETY: srcfd and dst_dirfd are guaranteed to be valid file descriptors, dst is
         // guaranteed to be a valid, nul-terminated C-style string, the system function will not
         // write to the string, and flags is guaranteed to be a valid combination.
-        let _ = check(unsafe { fclonefileat(srcfd, dst_dirfd, dst, flags) })?;
+        let _ = check(FunctionID::fclonefileat, unsafe {
+            fclonefileat(srcfd, dst_dirfd, dst, flags)
+        })?;
         Ok(())
     }
 

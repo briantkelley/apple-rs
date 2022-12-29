@@ -1,11 +1,12 @@
 use crate::_sys::posix::unistd::{
     self, confstr, mkdtemp, mkstemp, rmdir, _CS_DARWIN_USER_TEMP_DIR,
 };
-use crate::c::errno::{self, check, Error};
+use crate::c::errno::{self, check, AttributedError, Error};
+use crate::function_id::FunctionID;
 use crate::io::{FromRawFd, OwnedFd};
 use crate::posix::fcntl::Open;
 use core::ffi::{c_char, CStr};
-use core::num::{NonZeroI32, NonZeroUsize};
+use core::num::NonZeroUsize;
 use core::ptr;
 
 #[derive(Clone, Copy, Debug)]
@@ -23,7 +24,7 @@ impl ConfigurationString {
     ///      hold the entire string value, including the nul terminator.
     ///    * `None`: The variable name is valid but does not have a defined value.
     /// * `Err(_)`: The call was not successful and failed due to the provided reason.
-    pub fn get(self, buf: Option<&mut [u8]>) -> Result<Option<NonZeroUsize>, NonZeroI32> {
+    pub fn get(self, buf: Option<&mut [u8]>) -> Result<Option<NonZeroUsize>, AttributedError> {
         let (ptr, len) = buf.map_or((ptr::null_mut(), 0), |buf| (buf.as_mut_ptr(), buf.len()));
 
         // Clear the current error code. This must occur prior to calling the C function to
@@ -35,7 +36,9 @@ impl ConfigurationString {
         // always nul terminates the output.
         match NonZeroUsize::new(unsafe { confstr(self as _, ptr.cast(), len) }) {
             // confstr(3) returned 0. There was either an error or there is no entry.
-            None => errno::get().map(Err).transpose(),
+            None => errno::get()
+                .map(|errno| Err(AttributedError::with_errno(FunctionID::confstr, errno)))
+                .transpose(),
             // A non-zero result is always the capacity required for the full nul terminated string.
             cap => Ok(cap),
         }
@@ -56,8 +59,8 @@ impl ConfigurationString {
 /// # Panics
 ///
 /// Panics if `template` is not nul-terminated or does not end with one or more `X`s.
-pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, NonZeroI32> {
-    let _ = create_unique_retry_driver(template, |template| {
+pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, AttributedError> {
+    let _ = create_unique_retry_driver(FunctionID::mkdtemp, template, |template| {
         // SAFETY: template is guaranteed to be a valid mutable buffer. create_unique_retry_driver
         // verifies the buffer is nul-terminated. The system function will only overwrite bytes
         // preceding the nul terminator.
@@ -68,9 +71,12 @@ pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, 
         }
     })?;
 
-    let path = CStr::from_bytes_with_nul(template)
-        .ok()
-        .ok_or_else(|| NonZeroI32::new(Error::IllegalByteSequence as _).unwrap())?;
+    let path = CStr::from_bytes_with_nul(template).ok().ok_or_else(|| {
+        AttributedError::with_error(
+            FunctionID::CStr__from_bytes_with_nul,
+            Error::IllegalByteSequence,
+        )
+    })?;
     Open::default().path(path)
 }
 
@@ -87,8 +93,8 @@ pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, 
 /// # Panics
 ///
 /// Panics if `template` is not nul-terminated or does not end with one or more `X`s.
-pub fn create_unique_file_and_open(template: &mut [u8]) -> Result<OwnedFd, NonZeroI32> {
-    create_unique_retry_driver(template, |template| {
+pub fn create_unique_file_and_open(template: &mut [u8]) -> Result<OwnedFd, AttributedError> {
+    create_unique_retry_driver(FunctionID::mkstemp, template, |template| {
         // SAFETY: template is guaranteed to be a valid mutable buffer. create_unique_retry_driver
         // verifies the buffer is nul-terminated. The system function will only overwrite bytes
         // preceding the nul terminator.
@@ -99,9 +105,10 @@ pub fn create_unique_file_and_open(template: &mut [u8]) -> Result<OwnedFd, NonZe
 }
 
 fn create_unique_retry_driver(
+    function_id: FunctionID,
     template: &mut [u8],
     mut mktemp: impl FnMut(*mut c_char) -> i32,
-) -> Result<i32, NonZeroI32> {
+) -> Result<i32, AttributedError> {
     let mut iter = template.iter().rev();
     assert!(*iter.next().unwrap() == 0);
 
@@ -109,8 +116,8 @@ fn create_unique_retry_driver(
     let placeholder_range = (template_len - iter.position(|c| *c != b'X').unwrap())..template_len;
 
     loop {
-        match check(mktemp(template.as_mut_ptr().cast())) {
-            Err(e) if e.get() == Error::Interrupted as _ => {
+        match check(function_id, mktemp(template.as_mut_ptr().cast())) {
+            Err(e) if e.errno() == Error::Interrupted => {
                 // template is in an undefined state. Restore the placeholders and retry.
                 template[placeholder_range.clone()].fill(b'X');
             }
@@ -119,25 +126,25 @@ fn create_unique_retry_driver(
     }
 }
 
-pub fn remove_directory(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
+pub fn remove_directory(path: impl AsRef<CStr>) -> Result<(), AttributedError> {
     let path = path.as_ref().as_ptr();
     // It is not possible to recover from `rmdir(2)` errors as the directory removal may have
     // actually succeeded. Retrying may remove a directory created after the first call failed.
 
     // SAFETY: path is guaranteed to be a valid C-style string. The system function only reads its
     // contents.
-    let _ = check(unsafe { rmdir(path) })?;
+    let _ = check(FunctionID::rmdir, unsafe { rmdir(path) })?;
     Ok(())
 }
 
-pub fn unlink(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
+pub fn unlink(path: impl AsRef<CStr>) -> Result<(), AttributedError> {
     let path = path.as_ref().as_ptr();
     // It is not possible to recover from `unlink(2)` errors as the unlink may have actually
     // succeeded. Retrying may unlink a file created after the first call failed.
 
     // SAFETY: path is guaranteed to be a valid C-style string. The system function only reads its
     // contents.
-    let _ = check(unsafe { unistd::unlink(path) })?;
+    let _ = check(FunctionID::unlink, unsafe { unistd::unlink(path) })?;
     Ok(())
 }
 
@@ -177,10 +184,7 @@ mod tests {
     #[test]
     fn bad_name() {
         let name: ConfigurationString = unsafe { mem::transmute(0) };
-        assert_eq!(
-            name.get(None).unwrap_err().get(),
-            Error::InvalidArgument as _
-        );
+        assert_eq!(name.get(None).unwrap_err().errno(), Error::InvalidArgument);
     }
 
     #[test]
