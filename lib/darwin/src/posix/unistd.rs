@@ -3,6 +3,7 @@ use crate::_sys::posix::unistd::{
 };
 use crate::c::errno::{self, check, Error};
 use crate::io::{FromRawFd, OwnedFd};
+use crate::posix::fcntl::OpenOptions;
 use core::ffi::{c_char, CStr};
 use core::num::{NonZeroI32, NonZeroUsize};
 use core::ptr;
@@ -48,13 +49,14 @@ impl ConfigurationString {
 /// directory names depends on the number of `X`s provided (e.g. six `X`s will result in selecting
 /// one of 56,800,235,584 (62 ** 6) possible temporary directory names.
 ///
-/// This function creates the directory, mode 0700. This avoids the race between testing for a
-/// directory's existence and creating it for use.
+/// This function creates the directory, mode 0700, returning the file descriptor opened for
+/// reading. This avoids the race between testing for a directory's existence and creating it for
+/// use.
 ///
 /// # Panics
 ///
 /// Panics if `template` is not nul-terminated or does not end with one or more `X`s.
-pub fn create_unique_directory(template: &mut [u8]) -> Result<(), NonZeroI32> {
+pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, NonZeroI32> {
     let _ = create_unique_retry_driver(template, |template| {
         // SAFETY: template is guaranteed to be a valid mutable buffer. create_unique_retry_driver
         // verifies the buffer is nul-terminated. The system function will only overwrite bytes
@@ -65,7 +67,11 @@ pub fn create_unique_directory(template: &mut [u8]) -> Result<(), NonZeroI32> {
             0
         }
     })?;
-    Ok(())
+
+    let path = CStr::from_bytes_with_nul(template)
+        .ok()
+        .ok_or_else(|| NonZeroI32::new(Error::IllegalByteSequence as _).unwrap())?;
+    OpenOptions::default().open(path)
 }
 
 /// Takes the given file name `template` and overwrites a portion of it to create a file name. This
@@ -138,11 +144,10 @@ pub fn unlink(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
 #[cfg(test)]
 mod tests {
     use super::{
-        create_unique_directory, create_unique_file_and_open, remove_directory, unlink,
+        create_unique_directory_and_open, create_unique_file_and_open, remove_directory, unlink,
         ConfigurationString,
     };
     use crate::c::errno::Error;
-    use crate::posix::fcntl::OpenOptions;
     use crate::sys::stat::Metadata;
     use core::ffi::CStr;
     use core::mem;
@@ -198,22 +203,20 @@ mod tests {
         }
     }
 
-    // create_unique_directory()
+    // create_unique_directory_and_open()
 
     #[test]
     fn temporary_directory() {
         let mut buf: [u8; 512] = unsafe { mem::zeroed() };
         let (len, buf) = create_temporary_path(&mut buf);
 
-        create_unique_directory(buf).unwrap();
+        let fd = create_unique_directory_and_open(buf).unwrap();
         assert_temporary_path(buf, len);
-
-        let path = CStr::from_bytes_with_nul(buf).unwrap();
-        let fd = OpenOptions::new().read(true).open(path).unwrap();
 
         let metadata = Metadata::from_fd(&fd).unwrap();
         assert!(metadata.mode().is_dir());
 
+        let path = CStr::from_bytes_with_nul(buf).unwrap();
         drop(fd);
         remove_directory(path).unwrap();
     }
@@ -229,7 +232,6 @@ mod tests {
         assert_temporary_path(buf, len);
 
         let path = CStr::from_bytes_with_nul(buf).unwrap();
-
         drop(fd);
         unlink(path).unwrap();
     }
