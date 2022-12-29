@@ -4,40 +4,45 @@ use crate::io::{FromRawFd, OwnedFd};
 use core::ffi::CStr;
 use core::num::NonZeroI32;
 
-// Note: Additional variants cannot be added. The values must be masked by [`O_ACCMODE`].
+/// Specifies the type of I/O access granted to the file.
+#[derive(Clone, Copy, Debug)]
 #[repr(i32)]
-enum AccessModeFlag {
-    Read = 0b01,
-    Write = 0b10,
+pub enum AccessMode {
+    ReadOnly = O_RDONLY,
+    WriteOnly = O_WRONLY,
+    ReadWrite = O_RDWR,
 }
 
 /// Settings for opening, creating, and accessing a file.
-#[derive(Clone, Copy, Debug, Default)]
-pub struct OpenOptions {
-    options: i32,
+#[allow(missing_copy_implementations)]
+#[derive(Debug, Default)]
+pub struct Open {
+    oflag: i32,
 }
 
-impl OpenOptions {
+impl Open {
     #[must_use]
-    pub fn new() -> Self {
-        Self::default()
+    pub const fn new(access_mode: AccessMode) -> Self {
+        Self {
+            oflag: access_mode as _,
+        }
     }
 
-    pub fn close_on_exec(&mut self, close_on_exec: bool) -> &mut Self {
+    #[must_use]
+    pub const fn access_mode(mut self, access_mode: AccessMode) -> Self {
+        self.oflag &= !O_ACCMODE;
+        self.oflag |= access_mode as i32;
+        self
+    }
+
+    #[must_use]
+    pub const fn close_on_exec(self, close_on_exec: bool) -> Self {
         self.set_flag_enabled(O_CLOEXEC, close_on_exec)
     }
 
-    pub fn read(&mut self, read: bool) -> &mut Self {
-        self.set_flag_enabled(AccessModeFlag::Read as _, read)
-    }
-
-    pub fn write(&mut self, write: bool) -> &mut Self {
-        self.set_flag_enabled(AccessModeFlag::Write as _, write)
-    }
-
-    pub fn open(self, path: impl AsRef<CStr>) -> Result<OwnedFd, NonZeroI32> {
+    pub fn path(self, path: impl AsRef<CStr>) -> Result<OwnedFd, NonZeroI32> {
         let path = path.as_ref().as_ptr();
-        let oflag = self.oflag();
+        let oflag = self.oflag;
 
         // SAFETY: path is guaranteed to be a valid, nul-terminated C-style string and open() will
         // not write to path.
@@ -46,23 +51,11 @@ impl OpenOptions {
             .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
     }
 
-    fn oflag(self) -> i32 {
-        let oflag = self.options & !O_ACCMODE;
-        let access_mode = match self.options & O_ACCMODE {
-            0 => 0,
-            am if am == AccessModeFlag::Read as _ => O_RDONLY,
-            am if am == AccessModeFlag::Write as _ => O_WRONLY,
-            am if am == AccessModeFlag::Read as i32 | AccessModeFlag::Write as i32 => O_RDWR,
-            _ => unreachable!(),
-        };
-        oflag | access_mode
-    }
-
-    fn set_flag_enabled(&mut self, flag: i32, enable: bool) -> &mut Self {
+    const fn set_flag_enabled(mut self, flag: i32, enable: bool) -> Self {
         if enable {
-            self.options |= flag;
+            self.oflag |= flag;
         } else {
-            self.options &= !flag;
+            self.oflag &= !flag;
         }
         self
     }
@@ -70,34 +63,32 @@ impl OpenOptions {
 
 #[cfg(test)]
 mod tests {
-    use super::OpenOptions;
+    use super::{AccessMode, Open};
     use crate::_sys::posix::fcntl::{O_CLOEXEC, O_RDONLY, O_RDWR, O_WRONLY};
     use crate::c::errno::Error;
     use core::ffi::CStr;
 
     #[test]
     fn access_mode() {
-        let mut o = OpenOptions::new();
-
-        assert_eq!(o.oflag(), O_RDONLY);
-        assert_eq!(o.read(true).oflag(), O_RDONLY);
-        assert_eq!(o.write(true).oflag(), O_RDWR);
-        assert_eq!(o.read(false).oflag(), O_WRONLY);
-        assert_eq!(o.write(false).oflag(), O_RDONLY);
+        let o = Open::default;
+        assert_eq!(o().oflag, O_RDONLY);
+        assert_eq!(o().access_mode(AccessMode::WriteOnly).oflag, O_WRONLY);
+        assert_eq!(o().access_mode(AccessMode::ReadWrite).oflag, O_RDWR);
+        assert_eq!(o().access_mode(AccessMode::ReadOnly).oflag, O_RDONLY);
     }
 
     #[test]
     fn flags() {
-        let mut o = OpenOptions::new();
+        let o = Open::default;
 
-        assert_eq!(o.close_on_exec(true).oflag(), O_CLOEXEC);
-        assert_eq!(o.close_on_exec(false).oflag(), 0);
+        assert_eq!(o().close_on_exec(true).oflag, O_CLOEXEC);
+        assert_eq!(o().close_on_exec(true).close_on_exec(false).oflag, 0);
     }
 
     #[test]
     fn not_found() {
         let path = CStr::from_bytes_with_nul(b"/this/path/does/not/exist\0").unwrap();
-        let result = OpenOptions::new().read(true).open(path);
+        let result = Open::new(AccessMode::ReadOnly).path(path);
 
         assert_eq!(result.unwrap_err().get(), Error::NotFound as _);
     }
@@ -105,7 +96,7 @@ mod tests {
     #[test]
     fn read() {
         let path = CStr::from_bytes_with_nul(b"/dev/random\0").unwrap();
-        let result = OpenOptions::new().read(true).open(path);
+        let result = Open::new(AccessMode::ReadOnly).path(path);
 
         assert!(matches!(result, Ok(_)));
         drop(result);
@@ -114,7 +105,7 @@ mod tests {
     #[test]
     fn write() {
         let path = CStr::from_bytes_with_nul(b"/dev/null\0").unwrap();
-        let result = OpenOptions::new().write(true).open(path);
+        let result = Open::new(AccessMode::WriteOnly).path(path);
 
         assert!(matches!(result, Ok(_)));
         drop(result);

@@ -207,7 +207,7 @@ impl From<Permission> for Permissions {
 #[cfg(test)]
 mod tests {
     use super::{Metadata, Permission};
-    use crate::posix::fcntl::OpenOptions;
+    use crate::posix::fcntl::Open;
     use core::ffi::CStr;
 
     #[test]
@@ -218,7 +218,7 @@ mod tests {
         };
 
         let path = CStr::from_bytes_with_nul(b"/bin/sh\0").unwrap();
-        let fd = OpenOptions::new().read(true).open(path).unwrap();
+        let fd = Open::default().path(path).unwrap();
 
         let metadata = Metadata::from_fd(&fd).unwrap();
 

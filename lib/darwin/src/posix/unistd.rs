@@ -3,7 +3,7 @@ use crate::_sys::posix::unistd::{
 };
 use crate::c::errno::{self, check, Error};
 use crate::io::{FromRawFd, OwnedFd};
-use crate::posix::fcntl::OpenOptions;
+use crate::posix::fcntl::Open;
 use core::ffi::{c_char, CStr};
 use core::num::{NonZeroI32, NonZeroUsize};
 use core::ptr;
@@ -71,7 +71,7 @@ pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, 
     let path = CStr::from_bytes_with_nul(template)
         .ok()
         .ok_or_else(|| NonZeroI32::new(Error::IllegalByteSequence as _).unwrap())?;
-    OpenOptions::default().open(path)
+    Open::default().path(path)
 }
 
 /// Takes the given file name `template` and overwrites a portion of it to create a file name. This
