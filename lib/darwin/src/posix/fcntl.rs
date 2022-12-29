@@ -35,7 +35,7 @@ impl OpenOptions {
         self.set_flag_enabled(AccessModeFlag::Write as _, write)
     }
 
-    pub fn open<P: AsRef<CStr>>(&self, path: P) -> Result<OwnedFd, NonZeroI32> {
+    pub fn open(self, path: impl AsRef<CStr>) -> Result<OwnedFd, NonZeroI32> {
         let path = path.as_ref().as_ptr();
         let oflag = self.oflag();
 

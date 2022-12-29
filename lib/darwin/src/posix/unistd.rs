@@ -92,10 +92,10 @@ pub fn create_unique_file_and_open(template: &mut [u8]) -> Result<OwnedFd, NonZe
     .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
 }
 
-fn create_unique_retry_driver<F>(template: &mut [u8], mut mktemp: F) -> Result<i32, NonZeroI32>
-where
-    F: FnMut(*mut c_char) -> i32,
-{
+fn create_unique_retry_driver(
+    template: &mut [u8],
+    mut mktemp: impl FnMut(*mut c_char) -> i32,
+) -> Result<i32, NonZeroI32> {
     let mut iter = template.iter().rev();
     assert!(*iter.next().unwrap() == 0);
 
@@ -113,8 +113,8 @@ where
     }
 }
 
-pub fn remove_directory(path: &CStr) -> Result<(), NonZeroI32> {
-    let path = path.as_ptr();
+pub fn remove_directory(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
+    let path = path.as_ref().as_ptr();
     // It is not possible to recover from `rmdir(2)` errors as the directory removal may have
     // actually succeeded. Retrying may remove a directory created after the first call failed.
 
@@ -124,8 +124,8 @@ pub fn remove_directory(path: &CStr) -> Result<(), NonZeroI32> {
     Ok(())
 }
 
-pub fn unlink(path: &CStr) -> Result<(), NonZeroI32> {
-    let path = path.as_ptr();
+pub fn unlink(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
+    let path = path.as_ref().as_ptr();
     // It is not possible to recover from `unlink(2)` errors as the unlink may have actually
     // succeeded. Retrying may unlink a file created after the first call failed.
 
