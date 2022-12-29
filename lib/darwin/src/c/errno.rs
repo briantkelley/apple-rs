@@ -35,6 +35,46 @@ pub enum Error {
     NotSupported = errno::EOPNOTSUPP,
 }
 
+impl TryFrom<NonZeroI32> for Error {
+    type Error = NonZeroI32;
+
+    fn try_from(err: NonZeroI32) -> Result<Self, Self::Error> {
+        let variant = match err.get() {
+            errno::EPERM => Self::NotPermitted,
+            errno::ENOENT => Self::NotFound,
+            errno::EINTR => Self::Interrupted,
+            errno::EIO => Self::IO,
+            errno::ENXIO => Self::NoDevice,
+            errno::EBADF => Self::BadFileDescriptor,
+            errno::EDEADLK => Self::Deadlock,
+            errno::ENOMEM => Self::OutOfMemory,
+            errno::EACCES => Self::NoAccess,
+            errno::EFAULT => Self::BadAddress,
+            errno::EBUSY => Self::ResourceBusy,
+            errno::EEXIST => Self::AlreadyExists,
+            errno::EXDEV => Self::CrossesDevices,
+            errno::ENOTDIR => Self::NotADirectory,
+            errno::EISDIR => Self::IsADirectory,
+            errno::EINVAL => Self::InvalidArgument,
+            errno::ENFILE => Self::SystemFileLimit,
+            errno::EMFILE => Self::ProcessFileLimit,
+            errno::ETXTBSY => Self::ExecutableFileBusy,
+            errno::ENOSPC => Self::StorageFull,
+            errno::EROFS => Self::ReadOnlyFilesystem,
+            errno::EAGAIN => Self::WouldBlock,
+            errno::ELOOP => Self::FilesystemLoop,
+            errno::ENAMETOOLONG => Self::InvalidFilename,
+            errno::ENOTEMPTY => Self::DirectoryNotEmpty,
+            errno::EDQUOT => Self::FilesystemQuotaExceeded,
+            errno::EOVERFLOW => Self::Overflow,
+            errno::EILSEQ => Self::IllegalByteSequence,
+            errno::EOPNOTSUPP => Self::NotSupported,
+            _ => Err(err)?,
+        };
+        Ok(variant)
+    }
+}
+
 #[must_use]
 pub fn get() -> Option<NonZeroI32> {
     // SAFETY: __error() is guaranteed to return a thread-local, non-null pointer.
