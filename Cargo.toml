@@ -4,6 +4,7 @@ members = [
     "lib/dispatch",
     "lib/foundation",
     "lib/objc4",
+    "lib/os",
 ]
 
 [workspace.package]
