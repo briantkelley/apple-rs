@@ -20,6 +20,58 @@ macro_rules! activity_label_useraction {
     };
 }
 
+#[doc(hidden)]
+#[macro_export]
+macro_rules! _log_impl {
+    ($log:expr, $ty:ident, $format:literal $(, $item:expr)*) => {
+        {
+            use $crate::log::BuilderItem;
+
+            $crate::log_string!(static FORMAT = $format);
+            if let Some(builder) = ($log).$ty(FORMAT) {
+                builder
+                    $(.item($item))*
+                    .log();
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! log {
+    ($log:expr, $format:literal $(, $item:expr)*) => {
+        $crate::_log_impl!($log, log, $format $(, $item)*)
+    };
+}
+
+#[macro_export]
+macro_rules! log_info {
+    ($log:expr, $format:literal $(, $item:expr)*) => {
+        $crate::_log_impl!($log, info, $format $(, $item)*)
+    };
+}
+
+#[macro_export]
+macro_rules! log_debug {
+    ($log:expr, $format:literal $(, $item:expr)*) => {
+        $crate::_log_impl!($log, debug, $format $(, $item)*)
+    };
+}
+
+#[macro_export]
+macro_rules! log_error {
+    ($log:expr, $format:literal $(, $item:expr)*) => {
+        $crate::_log_impl!($log, error, $format $(, $item)*)
+    };
+}
+
+#[macro_export]
+macro_rules! log_fault {
+    ($log:expr, $format:literal $(, $item:expr)*) => {
+        $crate::_log_impl!($log, fault, $format $(, $item)*)
+    };
+}
+
 #[macro_export]
 macro_rules! log_string {
     (static $ident:ident = $literal:literal) => {

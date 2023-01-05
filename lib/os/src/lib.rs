@@ -44,6 +44,7 @@ mod macros;
 mod sys;
 
 pub mod activity;
+pub mod log;
 pub mod trace_base;
 
 pub use macros::paste;
