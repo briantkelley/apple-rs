@@ -2,8 +2,6 @@
 members = [
     "lib/darwin",
     "lib/dispatch",
-    "lib/foundation",
-    "lib/objc4",
     "lib/os",
 ]
 

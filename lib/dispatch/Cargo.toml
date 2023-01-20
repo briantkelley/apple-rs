@@ -18,4 +18,3 @@ version.workspace = true
 
 [dependencies]
 darwin = { path = "../darwin" }
-objc4 = { path = "../objc4" }

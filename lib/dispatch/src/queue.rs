@@ -2,10 +2,9 @@ extern crate alloc;
 
 use crate::{sys, Object};
 use alloc::boxed::Box;
-use core::ffi::c_void;
+use core::ffi::{c_char, c_void, CStr};
 use core::fmt::{self, Debug, Formatter};
 use darwin::sys::qos;
-use objc4::objc_object;
 
 #[repr(C)]
 pub struct Queue([u8; 0]);
@@ -60,10 +59,23 @@ impl Queue {
 
 impl Debug for Queue {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        #[link(name = "objc")]
+        extern "C" {
+            fn object_getClassName(obj: *const c_void) -> *const c_char;
+        }
+
         let obj: *const _ = self;
-        let obj: *const objc_object = obj.cast();
+        let obj = obj.cast();
         // SAFETY: The reference is guaranteed to be a valid pointer.
-        unsafe { &*obj }.fmt(f)
+        let class_name = unsafe { object_getClassName(obj) };
+        // SAFETY: object_getClassName always returns a valid C-style string.
+        let class_name = unsafe { CStr::from_ptr(class_name) };
+
+        f.write_fmt(format_args!(
+            "<{}: {:p}>",
+            class_name.to_str().unwrap(),
+            obj
+        ))
     }
 }
 
