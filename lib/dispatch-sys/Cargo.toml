@@ -1,0 +1,26 @@
+[package]
+authors.workspace = true
+categories = [
+    "external-ffi-bindings",
+    "no-std",
+    "no-std::no-alloc",
+    "os::macos-apis",
+]
+description = "Direct FFI bindings to Apple's Dispatch Clang module."
+edition.workspace = true
+keywords = [
+    "apple",
+    "central",
+    "dispatch",
+    "gcd",
+    "grand",
+    "ios",
+    "mac",
+    "macos",
+    "sys",
+]
+license.workspace = true
+name = "dispatch-sys"
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

@@ -2,6 +2,7 @@
 members = [
     "lib/darwin",
     "lib/dispatch",
+    "lib/dispatch-sys",
     "lib/os",
 ]
 resolver = "2"
@@ -17,7 +18,7 @@ categories = [
 ]
 edition = "2021"
 license = "Apache-2.0"
-repository = "https://github.com/briantkelley/rust-objc4"
+repository = "https://github.com/briantkelley/apple-rs"
 rust-version = "1.64"
 version = "0.0.1"
 

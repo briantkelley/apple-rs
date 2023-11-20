@@ -1,5 +1,5 @@
-use crate::sys::dispatch_function_t;
 use core::ffi::c_void;
+use dispatch_sys::dispatch_function_t;
 
 #[repr(C)]
 pub(crate) struct dispatch_queue_s([u8; 0]);
