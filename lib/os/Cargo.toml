@@ -16,4 +16,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-paste = "1.0.9"
+paste = { version = "1.0.9", optional = true }
+
+[features]
+experimental = ["dep:paste"]

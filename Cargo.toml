@@ -4,6 +4,7 @@ members = [
     "lib/dispatch",
     "lib/os",
 ]
+resolver = "2"
 
 [workspace.package]
 authors = [

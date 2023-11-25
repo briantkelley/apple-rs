@@ -17,4 +17,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-darwin = { path = "../darwin" }
+darwin = { path = "../darwin", features = ["experimental"], optional = true }
+
+[features]
+experimental = ["dep:darwin"]

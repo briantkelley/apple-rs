@@ -40,9 +40,14 @@ Idiomatic Rust bindings to Apple's Dispatch Clang module (located at
 )]
 #![allow(clippy::redundant_pub_crate)]
 
+#[cfg(feature = "experimental")]
 mod object;
+#[cfg(feature = "experimental")]
 mod queue;
+#[cfg(feature = "experimental")]
 mod sys;
 
+#[cfg(feature = "experimental")]
 pub use object::Object;
+#[cfg(feature = "experimental")]
 pub use queue::Queue;

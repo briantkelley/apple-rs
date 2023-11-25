@@ -39,9 +39,14 @@ Idiomatic Rust bindings to Apple's Darwin Clang module (located at `$SDKROOT/usr
 )]
 #![allow(clippy::missing_errors_doc, clippy::redundant_pub_crate)]
 
+#[cfg(feature = "experimental")]
 mod _sys;
 
+#[cfg(feature = "experimental")]
 pub mod c;
+#[cfg(feature = "experimental")]
 pub mod io;
+#[cfg(feature = "experimental")]
 pub mod posix;
+#[cfg(feature = "experimental")]
 pub mod sys;
