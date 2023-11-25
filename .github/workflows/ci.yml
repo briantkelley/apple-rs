@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ 'main' ]
+  push:
+    branches: [ 'main' ]
+
+jobs:
+  apple-darwin-check:
+    name: ${{ format('Check {0}-[aarch64, x86_64]-apple-darwin', matrix.toolchain) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup self update
+      - name: ${{ format('rustup install {0}', matrix.toolchain) }}
+        run: |
+          rustup install ${{ matrix.toolchain }} && \
+          rustup default ${{ matrix.toolchain }}
+      - run: |
+          rustup target add aarch64-apple-darwin && \
+          rustup target add x86_64-apple-darwin
+      - run: cargo fetch
+      - run: cargo check --target aarch64-apple-darwin
+      - run: cargo check --target x86_64-apple-darwin
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [ '1.64', 'stable' ]
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup self update
+      - run: rustup install stable
+      - run: cargo clippy --tests
