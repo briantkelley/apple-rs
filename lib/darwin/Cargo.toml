@@ -17,3 +17,6 @@ version.workspace = true
 
 [features]
 experimental = []
+
+[lints]
+workspace = true

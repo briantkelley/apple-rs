@@ -23,3 +23,6 @@ dispatch-sys = { path = "../dispatch-sys" }
 [features]
 dispatch_once_inline_fastpath = []
 experimental = ["dep:darwin"]
+
+[lints]
+workspace = true

@@ -20,3 +20,6 @@ paste = { version = "1.0.9", optional = true }
 
 [features]
 experimental = ["dep:paste"]
+
+[lints]
+workspace = true

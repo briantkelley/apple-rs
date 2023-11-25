@@ -1,7 +1,9 @@
+//! Automatically enables the `dispatch_once_inline_fastpath` feature if supported by the target.
+//!
+//! **Important:** `lib/dispatch-sys/build.rs` and `lib/dispatch/build.rs` should be identical.
+
 use std::ffi::OsStr;
 use std::process::ExitCode;
-
-// IMPORTANT: `lib/dispatch-sys/build.rs` and `lib/dispatch/build.rs` should be identical.
 
 fn main() -> ExitCode {
     println!("cargo:rerun-if-changed=build.rs");
@@ -30,7 +32,7 @@ fn main() -> ExitCode {
 
 fn input_env_var<K>(key: K) -> Option<String>
 where
-    K: std::fmt::Display + AsRef<OsStr>,
+    K: core::fmt::Display + AsRef<OsStr>,
 {
     println!("cargo:rerun-if-env-changed={}", &key);
     std::env::var(key).ok()
