@@ -18,7 +18,8 @@ version.workspace = true
 
 [dependencies]
 darwin = { path = "../darwin", features = ["experimental"], optional = true }
-dispatch-sys = { path = "../dispatch-sys", optional = true }
+dispatch-sys = { path = "../dispatch-sys" }
 
 [features]
-experimental = ["dep:darwin", "dep:dispatch-sys"]
+dispatch_once_inline_fastpath = []
+experimental = ["dep:darwin"]

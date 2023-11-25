@@ -19,7 +19,7 @@ categories = [
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/briantkelley/apple-rs"
-rust-version = "1.64"
+rust-version = "1.70"
 version = "0.0.1"
 
 [profile.bench]

@@ -26,7 +26,40 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [ '1.64', 'stable' ]
+        toolchain: [ '1.70', 'stable' ]
+
+  apple-darwin-test:
+    name: Test stable-x86_64-apple-darwin
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: rustup self update
+        run: |
+          brew update && \
+          brew install rustup
+      - name: rustup install stable
+        run: |
+          rustup install stable && \
+          rustup default stable
+      - run: cargo fetch
+      - run: cargo test
+
+  dispatch_once_inline_fastpath:
+    name: Test dispatch without dispatch_once_inline_fastpath feature
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: rustup self update
+        run: |
+          brew update && \
+          brew install rustup
+      - name: rustup install stable
+        run: |
+          rustup install stable && \
+          rustup default stable
+      - run: cargo fetch
+      - name: cargo test --package dispatch
+        run: NO_DISPATCH_ONCE_INLINE_FASTPATH=1 cargo test --package dispatch
 
   clippy:
     name: Clippy
