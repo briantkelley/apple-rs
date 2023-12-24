@@ -1,3 +1,19 @@
 {
+    "cSpell.ignoreRegExpList": [
+        "hexadecimal-number"
+    ],
+    "cSpell.ignoreWords": [
+        "fastpath",
+        "objc",
+        "repr",
+        "slowpath",
+        "uninit"
+    ],
+    "cSpell.patterns": [
+        {
+            "name": "hexadecimal-number",
+            "pattern": "0[Xx][0-9A-Fa-f]+"
+        }
+    ],
     "rust-analyzer.check.command": "clippy"
 }

@@ -6,7 +6,7 @@ use core::ops::Deref;
 
 /// A facility to initialize the value of a [`static` item][static-item] at runtime.
 ///
-/// The initializaiton is thread-safe, though the effects of the initialization function called at
+/// The initialization is thread-safe, though the effects of the initialization function called at
 /// runtime are only guaranteed to be visible to an arbitrary thread when the result of the
 /// initialization function is accessed through the `LazyStatic` (via the [`Deref`] trait).
 ///
@@ -43,6 +43,7 @@ union Payload<T> {
 impl<T> LazyStatic<T> {
     /// Constructs a new `LazyStatic<T>` that will call `initialize` to obtain its value on the
     /// first access (via the [`Deref`] trait).
+    #[inline]
     pub const fn new(initialize: fn() -> T) -> Self {
         Self {
             sentinel: Once::new(),
@@ -95,6 +96,7 @@ impl<T> Debug for LazyStatic<T>
 where
     T: Debug,
 {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         #[cfg(feature = "dispatch_once_inline_fastpath")]
         // SAFETY: This is actually unsafe as it may race with initialization on another thread.
@@ -126,6 +128,7 @@ where
 impl<T> Deref for LazyStatic<T> {
     type Target = T;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         self.initialize();
 
@@ -141,6 +144,7 @@ impl<T> Deref for LazyStatic<T> {
 }
 
 impl<T> Drop for LazyStatic<T> {
+    #[inline]
     fn drop(&mut self) {
         if needs_drop::<T>() {
             // Use the const fn as the first, out-most condition to maximize the optimizer's ability

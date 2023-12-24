@@ -145,7 +145,7 @@ mod tests {
         });
 
         // Hopefully 0.25 seconds is enough time to complete.
-        // TDOO: Use a semaphore with a timeout.
+        // TODO: Use a semaphore with a timeout.
         let _ = unsafe { usleep(250_000) };
         assert!(RESULT.load(Ordering::Acquire));
     }

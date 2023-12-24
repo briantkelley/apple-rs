@@ -34,6 +34,7 @@ struct UserCallback<T> {
 
 impl Once {
     /// Constructs a new sentinel to guarantee, at most, one-time execution of a function.
+    #[inline]
     #[must_use]
     pub const fn new() -> Self {
         Self(AtomicIsize::new(0))
@@ -82,11 +83,11 @@ impl Once {
         let context: *mut UserCallback<T> = context.cast();
         // SAFETY: [`Self::dispatch_once_with_context`] passes a reference to `context` as an opaque
         // pointer. This function is invoked synchronously so the pointer is guaranteed to be valid,
-        // though code inspection is required to prove the pointees are the same type.
-        let user_callaback = unsafe { &mut *context };
+        // but code inspection is required to validate the pointers are of the same type.
+        let user_callback = unsafe { &mut *context };
 
         let mut context = None;
-        swap(&mut context, &mut user_callaback.context);
+        swap(&mut context, &mut user_callback.context);
 
         // SAFETY: [`Self::dispatch_once_with_context`] always initializes the `context` field of
         // [`UserCallback<T>`] to [`Some`]. The field is an [`Option<T>`] so this function can take
@@ -97,7 +98,7 @@ impl Once {
         // [`Some`] value.
         let context = unsafe { context.unwrap_unchecked() };
 
-        (user_callaback.function)(context);
+        (user_callback.function)(context);
     }
 
     /// Gets a boolean value indicating whether the first function invocation this sentinel is
@@ -114,6 +115,7 @@ impl Once {
     /// dispatch once function **must** always be called before accessing any resources effected by
     /// the callback function.
     #[cfg(feature = "dispatch_once_inline_fastpath")]
+    #[inline]
     pub unsafe fn pending(&mut self) -> bool {
         // Although the [`dispatch_once_f`] wrapper does not perform an atomic read of `predicate`,
         // the implementation of [`dispatch_once_f`] does. The caller is likely checking whether any
@@ -136,6 +138,7 @@ impl Once {
 }
 
 impl Default for Once {
+    #[inline]
     fn default() -> Self {
         Self::new()
     }
