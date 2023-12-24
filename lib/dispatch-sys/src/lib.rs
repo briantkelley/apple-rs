@@ -5,7 +5,7 @@
 //! [libdispatch-1462.0.4](https://github.com/apple-oss-distributions/libdispatch/tree/libdispatch-1462.0.4).
 
 #![no_std]
-#![allow(non_camel_case_types)]
+#![allow(clippy::undocumented_unsafe_blocks, missing_docs, non_camel_case_types)]
 
 mod base;
 mod once;

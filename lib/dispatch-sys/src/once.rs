@@ -1,13 +1,15 @@
 use crate::dispatch_function_t;
-pub use core::ffi::c_void;
+use core::ffi::c_void;
 
 /// A predicate for use with [`dispatch_once_f`].
 pub type dispatch_once_t = isize;
 
 mod slowpath {
-    use super::*;
+    use super::{c_void, dispatch_function_t, dispatch_once_t};
 
     extern "C" {
+        // LINT: It's easier to keep this pub than to configure via the feature.
+        #[allow(unreachable_pub)]
         pub fn dispatch_once_f(
             predicate: *mut dispatch_once_t,
             context: *mut c_void,
@@ -25,10 +27,10 @@ pub unsafe fn dispatch_once_f(
     function: dispatch_function_t,
 ) {
     use core::sync::atomic::{compiler_fence, Ordering};
-    if predicate.read() == !0 {
+    if unsafe { predicate.read() } == !0 {
         compiler_fence(Ordering::SeqCst);
     } else {
-        slowpath::dispatch_once_f(predicate, context, function);
+        unsafe { slowpath::dispatch_once_f(predicate, context, function) };
     }
 }
 
