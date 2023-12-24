@@ -3,6 +3,8 @@
         "hexadecimal-number"
     ],
     "cSpell.ignoreWords": [
+        "corefoundation",
+        "deallocator",
         "fastpath",
         "objc",
         "repr",

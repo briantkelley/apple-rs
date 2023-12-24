@@ -14,15 +14,20 @@ dependency graph.
 
 **Idiomatic Rust Bindings:**
 
-* [`darwin`](lib/darwin): Bindings to Apple's Darwin Clang module (located at `$SDKROOT/usr/include/module.modulemap`).
 * [`dispatch`](lib/dispatch): Execute code concurrently on multicore hardware by submitting work to
   dispatch queues managed by the system.
-* [`os`](lib/os): Bindings to Apple's OS Clang module (located at `$SDKROOT/usr/include/module.modulemap`).
 
 **Raw Rust Bindings:**
 
+* [`corefoundation-sys`](lib/corefoundation-sys): Raw Rust bindings to Apple's CoreFoundation Clang
+  module (located at `$SDKROOT/System/Library/Frameworks/CoreFoundation.framework/Modules/module.modulemap`).
 * [`dispatch-sys`](lib/dispatch-sys): Raw Rust bindings to Apple's Dispatch Clang module (located at
   `$SDKROOT/usr/include/dispatch/module.modulemap`).
+
+**Experimental Rust Bindings:**
+
+* [`darwin`](lib/darwin): Bindings to Apple's Darwin Clang module (located at `$SDKROOT/usr/include/module.modulemap`).
+* [`os`](lib/os): Bindings to Apple's OS Clang module (located at `$SDKROOT/usr/include/module.modulemap`).
 
 ### Interface Stability
 
