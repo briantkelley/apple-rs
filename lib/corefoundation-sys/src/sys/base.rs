@@ -15,6 +15,9 @@ pub type CFTypeRef = *const c_void;
 
 declare_cf_type!(__CFString, CFStringRef, CFMutableStringRef);
 
+/// Constant used by some functions to indicate failed searches.
+pub const kCFNotFound: CFIndex = -1;
+
 /// Range type
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[repr(C)]
