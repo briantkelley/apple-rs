@@ -14,6 +14,11 @@ dependency graph.
 
 **Idiomatic Rust Bindings:**
 
+* [`corefoundation`](lib/corefoundation) Core Foundation is a framework that provides fundamental
+  software services useful to application services, application environments, and to applications
+  themselves. Core Foundation also provides abstractions for common data types, facilitates
+  internationalization with Unicode string storage, and offers a suite of utilities such as plug-in
+  support, XML property lists, URL resource access, and preferences.
 * [`dispatch`](lib/dispatch): Execute code concurrently on multicore hardware by submitting work to
   dispatch queues managed by the system.
 
@@ -29,8 +34,14 @@ dependency graph.
 * [`darwin`](lib/darwin): Bindings to Apple's Darwin Clang module (located at `$SDKROOT/usr/include/module.modulemap`).
 * [`os`](lib/os): Bindings to Apple's OS Clang module (located at `$SDKROOT/usr/include/module.modulemap`).
 
-### Interface Stability
+Some crates have an `experimental` feature that disables, by default, functions, modules, traits,
+types, etc. that are still under active development and subject to change. 
 
-Most crates have an `experimental` feature that disables, by default, functions, modules, traits,
-types, etc. that are still under active development and subject to change. Otherwise, the public
-interface of each crate is expected to remain stable (i.e. source compatible).
+# Open Issues
+
+Although the major version number of the crates in this repository is `0`, the public interfaces are
+expected to remain stable (i.e. source compatible) as additional functionality is added. Unstable
+interfaces require use of the `experimental` feature.
+
+Before crates can be published with a major version of `1`, the active issues in the
+[1.0.0 milestone](https://github.com/briantkelley/apple-rs/milestone/1) need to be resolved.

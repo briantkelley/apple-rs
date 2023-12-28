@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "lib/corefoundation",
     "lib/corefoundation-sys",
     "lib/darwin",
     "lib/dispatch",
