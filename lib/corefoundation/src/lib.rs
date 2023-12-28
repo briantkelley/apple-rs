@@ -16,3 +16,5 @@
 mod base;
 
 pub use base::convert::{ExpectFrom, FromUnchecked};
+pub use base::ffi;
+pub use base::object::Object;

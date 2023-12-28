@@ -12,6 +12,24 @@ mirror [The Rust Standard Library](https://doc.rust-lang.org/std/) as closely as
 
 ## Design
 
+### Downstream API Bindings
+
+Apple defines types compatible with the polymorphic Core Foundation functions outside of the Core
+Foundation framework (e.g., `CoreGraphics`, `CoreText`). The facilities this crate uses to provide
+idiomatic Rust API bindings for Core Foundation are available to crates implementing Rust API
+bindings for frameworks with Core Foundation-compatible types.
+
+`ForeignFunctionInterface` is the primary trait used to bridge the between the foreign function
+interface and Rust. It provides a facility to retrieve the `CFTypeRef` pointer from the Rust type
+for use in calling foreign functions. This trait **should not** be used by crates utilizing the Rust
+API bindings; it's intended only for crates *implementing* Rust API bindings. This is intentionally
+separate from `Object` so the FFI related functionality is not visible by default when using the
+`Object` interface.
+
+The `declare_and_impl_type!` macro declares a new type on which to implement Rust bindings for a
+Core Foundation-compatible type. A new type is required to implement the many of the standard
+traits, as the FFI type definition typically originates in a separate `-sys` crate.
+
 ### Signed/Unsigned Conversion
 
 Core Foundation's canonical index type and size type, `CFIndex`, is signed. Foundation's canonical
