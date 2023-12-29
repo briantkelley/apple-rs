@@ -26,9 +26,9 @@ API bindings; it's intended only for crates *implementing* Rust API bindings. Th
 separate from `Object` so the FFI related functionality is not visible by default when using the
 `Object` interface.
 
-The `declare_and_impl_type!` macro declares a new type on which to implement Rust bindings for a
-Core Foundation-compatible type. A new type is required to implement the many of the standard
-traits, as the FFI type definition typically originates in a separate `-sys` crate.
+The `define_and_impl_type!` macro defines a new type on which to implement Rust bindings for a Core
+Foundation-compatible type. A new type is required to implement the many of the standard traits, as
+the FFI type definition typically originates in a separate `-sys` crate.
 
 ### Memory Management
 

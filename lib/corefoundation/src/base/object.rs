@@ -3,7 +3,7 @@ use crate::ffi::ForeignFunctionInterface;
 /// The base trait of all Core Foundation objects.
 pub trait Object: ForeignFunctionInterface {}
 
-/// Declares a new type on which to implement Rust bindings for a Core Foundation object type. This
+/// Defines a new type on which to implement Rust bindings for a Core Foundation object type. This
 /// macro also implements the [`Object`], [`Eq`], and [`PartialEq`] traits on the new type.
 ///
 /// A new type is required to implement the many of the standard traits, as the type definition
@@ -11,7 +11,7 @@ pub trait Object: ForeignFunctionInterface {}
 ///
 /// The user of this macro must manually implement [`ForeignFunctionInterface`] on the new type.
 #[macro_export]
-macro_rules! declare_and_impl_type {
+macro_rules! define_and_impl_type {
     ($(#[$doc:meta])* $ty:ident) => {
         $(#[$doc])*
         // LINT: This type is not intended to be user accessible.
