@@ -1,4 +1,4 @@
-use crate::{ExpectFrom, FromUnchecked};
+use crate::ffi::convert::{ExpectFrom, FromUnchecked};
 use core::ops::Range;
 use corefoundation_sys::{CFIndex, CFRange};
 

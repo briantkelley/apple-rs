@@ -1,4 +1,4 @@
-use crate::{ExpectFrom, FromUnchecked};
+use crate::ffi::convert::{ExpectFrom, FromUnchecked};
 use corefoundation_sys::CFIndex;
 
 impl ExpectFrom<usize> for CFIndex {

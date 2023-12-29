@@ -17,6 +17,8 @@ use crate::sync::Arc;
 use crate::Object;
 use core::ptr::NonNull;
 
+pub mod convert;
+
 /// A trait to facilitate implementation of Rust bindings for frameworks that implement Core
 /// Foundation object types.
 ///
