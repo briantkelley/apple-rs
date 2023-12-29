@@ -14,7 +14,9 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
 mod base;
+mod rc;
 
 pub use base::convert::{ExpectFrom, FromUnchecked};
 pub use base::ffi;
 pub use base::object::Object;
+pub use rc::{boxed, sync};

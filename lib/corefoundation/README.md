@@ -30,6 +30,30 @@ The `declare_and_impl_type!` macro declares a new type on which to implement Rus
 Core Foundation-compatible type. A new type is required to implement the many of the standard
 traits, as the FFI type definition typically originates in a separate `-sys` crate.
 
+### Memory Management
+
+The `Box<T>` and `Arc<T>` smart pointers implemented by this crate fulfill the following
+requirements:
+
+* Are a true zero-cost abstraction.
+* Show Core Foundation objects are heap-allocated through the type system.
+* Combine Rust’s mutable references with Core Foundation’s mutable types.
+
+The type name `Box<T>` signals to the reader that `T` is heap-allocated and that the instance `T` is
+unique. Similarly, the type name `Arc<T>` indicates `T` is heap-allocated and that the instance `T`
+is shared with other parts of the program.
+
+Both types `Deref` to `T`, the Rust type implementing the Core Foundation API bindings, which is
+crucial in making the abstraction zero-cost. When the smart pointer is dereferenced by the compiler,
+it returns the Core Foundation pointer value as a reference to `T`, which can be passed directly
+through to the C API.
+
+The implementations of `Box<T>` and `Arc<T>` for Core Foundation are virtually identical, with the
+primary difference being `Box<T>` also implements `DerefMut`, `AsMut`, and `BorrowMut`. Therefore,
+`Box<T>` should only be used if the Core Foundation object instance a mutable type uniquely owned by
+the raw pointer (i.e., a `Create` or `Copy` function return the pointer). Otherwise, immutable types
+and objects that may be retained elsewhere should use `Arc<T>`.
+
 ### Signed/Unsigned Conversion
 
 Core Foundation's canonical index type and size type, `CFIndex`, is signed. Foundation's canonical
