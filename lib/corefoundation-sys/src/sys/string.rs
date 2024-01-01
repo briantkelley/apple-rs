@@ -64,13 +64,6 @@ extern "C" {
         isExternalRepresentation: Boolean,
     ) -> CFStringRef;
 
-    /// Copies the provided buffer into `CFString`'s internal storage.
-    pub fn CFStringCreateWithCharacters(
-        alloc: CFAllocatorRef,
-        chars: *const UniChar,
-        numChars: CFIndex,
-    ) -> CFStringRef;
-
     /// Number of 16-bit Unicode characters in the string.
     pub fn CFStringGetLength(theString: CFStringRef) -> CFIndex;
 

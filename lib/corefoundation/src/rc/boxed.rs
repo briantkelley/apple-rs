@@ -45,7 +45,7 @@ where
     /// 3. `cf` must be compatible with the implementation of `T`, which can only be verified
     ///    through code inspection.
     ///
-    /// [`Arc<T>`]: crate::arc::Arc
+    /// [`Arc<T>`]: crate::sync::Arc
     /// [`Deref`]: core::ops::Deref
     /// [The Create Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-103029
     #[inline]

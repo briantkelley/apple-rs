@@ -13,8 +13,12 @@
 #![allow(clippy::redundant_pub_crate)]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 mod base;
 mod rc;
+pub mod string;
 
 pub use base::ffi;
 pub use base::object::Object;

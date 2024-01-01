@@ -23,7 +23,8 @@ corefoundation-sys = { path = "../corefoundation-sys" }
 [features]
 default = ["std"]
 
-std = ["corefoundation-sys/std"]
+alloc = []
+std = ["alloc", "corefoundation-sys/std"]
 
 [lints]
 workspace = true
