@@ -4,7 +4,7 @@
 //! the object instance when dropped.
 
 use super::impl_rc;
-use crate::Object;
+use crate::ffi::ForeignFunctionInterface;
 use core::borrow::BorrowMut;
 use core::ops::DerefMut;
 use core::ptr::NonNull;
@@ -13,11 +13,11 @@ use corefoundation_sys::CFRelease;
 /// An owned (i.e., exclusive) pointer for a Core Foundation object instance.
 pub struct Box<T>(pub(super) NonNull<T>)
 where
-    T: Object;
+    T: ForeignFunctionInterface;
 
 impl<T> Box<T>
 where
-    T: Object,
+    T: ForeignFunctionInterface,
 {
     /// Constructs a new `Box<T>` from a raw, non-null Core Foundation object instance pointer
     /// obtained from a function following [The Create Rule][].
@@ -62,7 +62,7 @@ impl_rc!(Box);
 
 impl<T> AsMut<T> for Box<T>
 where
-    T: Object,
+    T: ForeignFunctionInterface,
 {
     #[inline]
     fn as_mut(&mut self) -> &mut T {
@@ -72,7 +72,7 @@ where
 
 impl<T> BorrowMut<T> for Box<T>
 where
-    T: Object,
+    T: ForeignFunctionInterface,
 {
     #[inline]
     fn borrow_mut(&mut self) -> &mut T {
@@ -82,7 +82,7 @@ where
 
 impl<T> DerefMut for Box<T>
 where
-    T: Object,
+    T: ForeignFunctionInterface,
 {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {

@@ -5,7 +5,7 @@ macro_rules! impl_rc {
     ($name:ident) => {
         impl<T> AsRef<T> for $name<T>
         where
-            T: $crate::Object,
+            T: $crate::ffi::ForeignFunctionInterface,
         {
             #[inline]
             fn as_ref(&self) -> &T {
@@ -15,7 +15,7 @@ macro_rules! impl_rc {
 
         impl<T> core::borrow::Borrow<T> for $name<T>
         where
-            T: $crate::Object,
+            T: $crate::ffi::ForeignFunctionInterface,
         {
             #[inline]
             fn borrow(&self) -> &T {
@@ -25,7 +25,7 @@ macro_rules! impl_rc {
 
         impl<T> core::fmt::Debug for $name<T>
         where
-            T: $crate::Object + core::fmt::Debug,
+            T: $crate::ffi::ForeignFunctionInterface + core::fmt::Debug,
         {
             #[inline]
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -35,7 +35,7 @@ macro_rules! impl_rc {
 
         impl<T> core::ops::Deref for $name<T>
         where
-            T: $crate::Object,
+            T: $crate::ffi::ForeignFunctionInterface,
         {
             type Target = T;
 
@@ -51,7 +51,7 @@ macro_rules! impl_rc {
 
         impl<T> core::fmt::Display for $name<T>
         where
-            T: $crate::Object + core::fmt::Display,
+            T: $crate::ffi::ForeignFunctionInterface + core::fmt::Display,
         {
             #[inline]
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -61,7 +61,7 @@ macro_rules! impl_rc {
 
         impl<T> Drop for $name<T>
         where
-            T: $crate::Object,
+            T: $crate::ffi::ForeignFunctionInterface,
         {
             #[inline]
             fn drop(&mut self) {
@@ -71,11 +71,11 @@ macro_rules! impl_rc {
             }
         }
 
-        impl<T> Eq for $name<T> where T: $crate::Object + Eq {}
+        impl<T> Eq for $name<T> where T: $crate::ffi::ForeignFunctionInterface + Eq {}
 
         impl<T> core::hash::Hash for $name<T>
         where
-            T: $crate::Object + core::hash::Hash,
+            T: $crate::ffi::ForeignFunctionInterface + core::hash::Hash,
         {
             #[inline]
             fn hash<H>(&self, state: &mut H)
@@ -88,7 +88,7 @@ macro_rules! impl_rc {
 
         impl<T> Ord for $name<T>
         where
-            T: $crate::Object + Ord,
+            T: $crate::ffi::ForeignFunctionInterface + Ord,
         {
             #[inline]
             fn cmp(&self, other: &Self) -> core::cmp::Ordering {
@@ -98,7 +98,7 @@ macro_rules! impl_rc {
 
         impl<T> PartialEq for $name<T>
         where
-            T: $crate::Object + PartialEq,
+            T: $crate::ffi::ForeignFunctionInterface + PartialEq,
         {
             #[inline]
             fn eq(&self, other: &Self) -> bool {
@@ -115,7 +115,7 @@ macro_rules! impl_rc {
 
         impl<T> PartialEq<&T> for $name<T>
         where
-            T: $crate::Object + PartialEq,
+            T: $crate::ffi::ForeignFunctionInterface + PartialEq,
         {
             #[inline]
             fn eq(&self, other: &&T) -> bool {
@@ -132,7 +132,7 @@ macro_rules! impl_rc {
 
         impl<T> PartialOrd for $name<T>
         where
-            T: $crate::Object + PartialOrd,
+            T: $crate::ffi::ForeignFunctionInterface + PartialOrd,
         {
             #[inline]
             fn partial_cmp(&self, rhs: &Self) -> Option<core::cmp::Ordering> {
@@ -162,7 +162,7 @@ macro_rules! impl_rc {
 
         impl<T> PartialOrd<&T> for $name<T>
         where
-            T: $crate::Object + PartialOrd,
+            T: $crate::ffi::ForeignFunctionInterface + PartialOrd,
         {
             #[inline]
             fn partial_cmp(&self, rhs: &&T) -> Option<core::cmp::Ordering> {
@@ -192,7 +192,7 @@ macro_rules! impl_rc {
 
         impl<T> core::fmt::Pointer for $name<T>
         where
-            T: $crate::Object,
+            T: $crate::ffi::ForeignFunctionInterface,
         {
             #[inline]
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -202,11 +202,11 @@ macro_rules! impl_rc {
 
         // SAFETY: Core Foundation provides thread-safe reference counting, so if T is [`Send`],
         // it's safe to transfer ownership to another thread.
-        unsafe impl<T> Send for $name<T> where T: $crate::Object + Send {}
+        unsafe impl<T> Send for $name<T> where T: $crate::ffi::ForeignFunctionInterface + Send {}
 
         // SAFETY: Core Foundation provides thread-safe reference counting, so if T is [`Sync`],
         // it's safe to use allow parallel reference counting operations across threads.
-        unsafe impl<T> Sync for $name<T> where T: $crate::Object + Sync {}
+        unsafe impl<T> Sync for $name<T> where T: $crate::ffi::ForeignFunctionInterface + Sync {}
     };
 }
 

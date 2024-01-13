@@ -11,10 +11,10 @@
 //! by default when using the [`Object`] interface.
 //!
 //! [`CFTypeRef`]: corefoundation_sys::CFTypeRef
+//! [`Object`]: crate::Object
 
 use crate::boxed::Box;
 use crate::sync::Arc;
-use crate::Object;
 use core::ptr::NonNull;
 
 pub mod convert;
@@ -30,6 +30,8 @@ pub mod convert;
 /// This type is `unsafe` to implement because whether any particular pointer type is compatible
 /// with the polymorphic Core Foundation functions cannot be verified at compile time. This must be
 /// verified through code inspection.
+///
+/// [`Object`]: crate::Object
 pub unsafe trait ForeignFunctionInterface {
     /// The type the [`CFTypeRef`] pointer points to.
     ///
@@ -60,7 +62,7 @@ pub unsafe trait ForeignFunctionInterface {
     #[inline]
     unsafe fn with_create_rule(cf: *const Self::Raw) -> Option<Arc<Self>>
     where
-        Self: Object + Sized,
+        Self: Sized,
     {
         NonNull::new(cf.cast_mut()).map(|cf| {
             // SAFETY: Caller asserts `cf` meets all safety requirements.
@@ -104,7 +106,7 @@ pub unsafe trait ForeignFunctionInterface {
     #[inline]
     unsafe fn with_create_rule_mut(cf: *mut Self::Raw) -> Option<Box<Self>>
     where
-        Self: Object + Sized,
+        Self: Sized,
     {
         NonNull::new(cf).map(|cf| {
             // SAFETY: Caller asserts `cf` meets all safety requirements.

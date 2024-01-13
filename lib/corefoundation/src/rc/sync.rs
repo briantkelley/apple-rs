@@ -4,8 +4,8 @@
 //! object instance when dropped.
 
 use crate::boxed::Box;
+use crate::ffi::ForeignFunctionInterface;
 use crate::rc::impl_rc;
-use crate::Object;
 use core::mem::forget;
 use core::ptr::NonNull;
 use corefoundation_sys::{CFRelease, CFRetain};
@@ -24,11 +24,11 @@ use corefoundation_sys::{CFRelease, CFRetain};
 /// [`clone`]: Clone::clone
 pub struct Arc<T>(NonNull<T>)
 where
-    T: Object;
+    T: ForeignFunctionInterface;
 
 impl<T> Arc<T>
 where
-    T: Object,
+    T: ForeignFunctionInterface,
 {
     /// Constructs a new `Arc<T>` from a raw, non-null Core Foundation object instance pointer
     /// obtained from a function following [The Create Rule][].
@@ -102,7 +102,7 @@ impl_rc!(Arc);
 
 impl<T> Clone for Arc<T>
 where
-    T: Object,
+    T: ForeignFunctionInterface,
 {
     #[inline]
     fn clone(&self) -> Self {
@@ -115,7 +115,7 @@ where
 
 impl<T> From<Box<T>> for Arc<T>
 where
-    T: Object,
+    T: ForeignFunctionInterface,
 {
     #[inline]
     fn from(value: Box<T>) -> Self {
