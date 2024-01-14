@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "lib/c-ffi",
     "lib/corefoundation",
     "lib/corefoundation-sys",
     "lib/darwin",

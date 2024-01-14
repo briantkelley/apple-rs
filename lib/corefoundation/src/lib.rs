@@ -21,4 +21,5 @@ pub mod string;
 
 pub use base::ffi;
 pub use base::object::Object;
+pub use c_ffi::opaque_type;
 pub use retain_release::{boxed, sync};

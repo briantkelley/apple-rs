@@ -36,14 +36,7 @@ pub trait Object {}
 #[macro_export]
 macro_rules! define_and_impl_type {
     ($(#[$doc:meta])* $ty:ident, raw: $raw_ty:ident) => {
-        $(#[$doc])*
-        // LINT: This is an opaque, heap allocated type. It cannot be copied.
-        #[allow(missing_copy_implementations)]
-        #[repr(C)]
-        pub struct $ty {
-            _data: [u8; 0],
-            _marker: core::marker::PhantomData<(*const u8, core::marker::PhantomPinned)>,
-        }
+        $crate::opaque_type!($(#[$doc])* $ty);
 
         #[allow(unused_qualifications)]
         impl $crate::ffi::ForeignFunctionInterface for $ty {

@@ -5,19 +5,15 @@
     non_upper_case_globals
 )]
 
+use c_ffi::opaque_type;
+
 /// Defines an opaque type to act as a proxy for a Core Foundation object type.
 ///
-/// By default, the type is `!Send` and `!Sync`. These markers must be added by the bindings, as
-/// appropriate for the object type.
+/// By default, the type is `!Send` and `!Sync`, but these traits may be implemented if supported by
+/// the object type.
 macro_rules! declare_cf_type {
     ($struct:ident, $ref:ident) => {
-        // LINT: This type is not intended to be user accessible.
-        #[allow(missing_copy_implementations, missing_debug_implementations)]
-        #[repr(C)]
-        pub struct $struct {
-            _data: [u8; 0],
-            _marker: core::marker::PhantomData<core::marker::PhantomPinned>,
-        }
+        $crate::sys::opaque_type!($struct);
         pub type $ref = *const $struct;
     };
     ($struct:ident, $ref:ident, $mutable_ref:ident) => {

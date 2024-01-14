@@ -18,6 +18,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
+c-ffi = { path = "../c-ffi" }
 corefoundation-sys = { path = "../corefoundation-sys" }
 retain-release = { path = "../retain-release" }
 

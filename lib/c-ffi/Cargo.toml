@@ -1,0 +1,24 @@
+[package]
+authors.workspace = true
+categories.workspace = true
+description = "Convenience utilities for implementing *-sys crates and Rust bindings."
+edition.workspace = true
+keywords = [
+    "apple",
+    "core",
+    "foundation",
+    "ios",
+    "mac",
+    "macos",
+    "object",
+    "opaque",
+    "os",
+]
+license.workspace = true
+name = "c-ffi"
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
