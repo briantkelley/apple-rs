@@ -304,7 +304,7 @@ impl String {
 
         // SAFETY: The [`CFStringRef`] was just created so it's an exclusive pointer, it has a
         // retain that must be released, and [`String`] is a correct [`CFType`] implementation.
-        unsafe { Self::try_from_create_rule(cf) }.ok_or(FromBytesError(()))
+        unsafe { Self::try_from_owned_ptr(cf) }.ok_or(FromBytesError(()))
     }
 
     /// Returns a [`String`] object initialized by copying the UTF-8 code units from the string

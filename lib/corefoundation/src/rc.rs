@@ -65,9 +65,9 @@ macro_rules! impl_rc {
             fn drop(&mut self) {
                 // SAFETY: The creator of the smart pointer asserted all the [`NonNull::as_mut`]
                 // safety criteria were met by constructing the smart pointer.
-                let cf = unsafe { self.0.as_mut() };
+                let ptr = unsafe { self.0.as_mut() };
                 // SAFETY: `self` is not used after the call to `T::release`.
-                unsafe { T::release(cf) }
+                unsafe { T::release(ptr) }
             }
         }
 
@@ -200,12 +200,12 @@ macro_rules! impl_rc {
             }
         }
 
-        // SAFETY: Core Foundation provides thread-safe reference counting, so if T is [`Send`],
-        // it's safe to transfer ownership to another thread.
+        // SAFETY: All of Apple's reference counting implementations are thread-safe, so if T is
+        // [`Send`], it's safe to transfer ownership to another thread.
         unsafe impl<T> Send for $name<T> where T: $crate::ffi::ForeignFunctionInterface + Send {}
 
-        // SAFETY: Core Foundation provides thread-safe reference counting, so if T is [`Sync`],
-        // it's safe to use allow parallel reference counting operations across threads.
+        // SAFETY: All of Apple's reference counting implementations are thread-safe, so if T is
+        // [`Sync`], it's safe to use allow parallel reference counting operations across threads.
         unsafe impl<T> Sync for $name<T> where T: $crate::ffi::ForeignFunctionInterface + Sync {}
     };
 }

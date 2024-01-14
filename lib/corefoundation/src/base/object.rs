@@ -1,3 +1,21 @@
+//! Apple defines types compatible with the polymorphic Core Foundation functions outside of the
+//! Core Foundation framework (e.g., `CoreGraphics`, `CoreText`). The facilities this crate uses to
+//! provide idiomatic Rust API bindings for Core Foundation are available to crates implementing
+//! Rust API bindings for frameworks with Core Foundation-compatible types.
+//!
+//! The [`define_and_impl_type`] macro defines a new opaque type to represent the foreign type. It
+//! also implements:
+//!
+//! * [`ForeignFunctionInterface`] to bridge the between the foreign function interface and Rust. It
+//!   provides a facility to retrieve the [`CFTypeRef`] pointer from the Rust type for use in
+//!   calling foreign functions. This trait **should not** be used by crates utilizing the Rust API
+//!   bindings; it's intended only for crates *implementing* Rust API bindings.
+//! * [`Object`], which identifies a type as compatible with the polymorphic Core Foundation
+//!   functions.
+//!
+//! [`CFTypeRef`]: corefoundation_sys::CFTypeRef
+//! [`ForeignFunctionInterface`]: crate::ffi::ForeignFunctionInterface
+
 /// The base trait of all Core Foundation objects.
 pub trait Object {}
 
@@ -28,24 +46,23 @@ macro_rules! define_and_impl_type {
         }
 
         #[allow(unused_qualifications)]
-        // SAFETY: The instantiator is defining `$ty` as the bindings type for the `$raw_ty` Core
-        // Foundation pointer type, which is compatible with the polymorphic Core Foundation
-        // functions and the bindings implemented in `$ty`.
-        unsafe impl $crate::ffi::ForeignFunctionInterface for $ty {
+        impl $crate::ffi::ForeignFunctionInterface for $ty {
             type Raw = $raw_ty;
 
             #[inline]
-            unsafe fn from_get_rule(cf: core::ptr::NonNull<Self::Raw>) -> $crate::sync::Arc<Self>
+            unsafe fn from_borrowed_ptr(
+                ptr: core::ptr::NonNull<Self::Raw>
+            ) -> $crate::sync::Arc<Self>
             where
                 Self: Sized,
             {
-                let cf = cf.as_ptr().cast();
+                let cf = ptr.as_ptr().cast();
                 // SAFETY: `cf` is a non-null pointer to a [`CFTypeRef`].
                 let cf = unsafe { corefoundation_sys::CFRetain(cf) }.cast_mut();
                 // SAFETY: [`CFRetain`] is guaranteed to return its argument.
                 let cf = unsafe { core::ptr::NonNull::new_unchecked(cf) }.cast();
                 // SAFETY: Caller asserts `cf` meets all safety requirements.
-                unsafe { $crate::sync::Arc::with_create_rule(cf) }
+                unsafe { $crate::sync::Arc::from_owned_ptr(cf) }
             }
 
             #[inline]
@@ -79,7 +96,7 @@ macro_rules! define_and_impl_type {
                 let description_cf = core::ptr::NonNull::new(description.cast_mut())
                     .expect("CFCopyDescription returned NULL");
                 // SAFETY: [`CFCopyDescription`] returns a [`CFStringRef`] following the create rule
-                let string = unsafe { $crate::string::String::from_create_rule(description_cf) };
+                let string = unsafe { $crate::string::String::from_owned_ptr(description_cf) };
 
                 write!(f, "{}", &*string)
             }
