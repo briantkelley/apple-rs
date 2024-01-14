@@ -8,7 +8,6 @@ use crate::ffi::ForeignFunctionInterface;
 use crate::rc::impl_rc;
 use core::mem::forget;
 use core::ptr::NonNull;
-use corefoundation_sys::{CFRelease, CFRetain};
 
 /// A thread-safe reference-counting pointer for a Core Foundation object instance.
 ///
@@ -38,62 +37,22 @@ where
     ///
     /// # Safety
     ///
-    /// This function is unsafe because:
+    /// When calling this constructor, you must ensure all the following are true:
     ///
-    /// 1. If the Core Foundation object instance is mutable and is visible outside of the Rust
-    ///    language boundary, usage of the object instance may result in undefined behavior the
-    ///    object is mutated while a reference has been obtained through [`Deref`]. If Rust's
-    ///    aliasing rules cannot be applied to the Core Foundation object instance (specifically
-    ///    that the memory the pointer points does not get mutated while a shared reference has been
-    ///    obtained through `Arc<T>`), it is **not** safe to use in any context.
-    /// 2. If the object instance does not have a retain that must be balanced, it will be
+    /// 1. The pointer must be properly aligned.
+    /// 2. The pointer must point to an initialized instance of `T::Raw`.
+    /// 3. You must enforce Rust’s aliasing rules if the lifetime provided by [`Arc<T>`] does not
+    ///    wholly reflect the actual lifetime of the data. In particular, while this [`Arc<T>`]
+    ///    exists, the memory the pointer points to must not get mutated.
+    /// 4. The pointer must point to an object instance compatible with the polymorphic Core
+    ///    Foundation functions and the bindings implemented by `T`.
+    /// 5. If the object instance does not have a retain that must be balanced, it will be
     ///    over-released, which may result in undefined behavior.
-    /// 3. `cf` must be compatible with the implementation of `T`, which can only be verified
-    ///    through code inspection.
     ///
-    /// [`Deref`]: core::ops::Deref
     /// [The Create Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-103029
     #[inline]
     #[must_use]
     pub const unsafe fn with_create_rule(cf: NonNull<T::Raw>) -> Self {
-        Self(cf.cast())
-    }
-
-    /// Constructs a new `Arc<T>` from a raw, non-null Core Foundation object instance pointer
-    /// obtained from a function following [The Get Rule][].
-    ///
-    /// The object is retained by the `Arc<T>` to ensure its lifetime is at least as long as the
-    /// `Arc<T>`, and the object will be released when the `Arc<T>` is dropped, balancing the retain
-    /// added by this constructor.
-    ///
-    /// Note that if this constructor is incorrectly used in place of [`with_create_rule`], a memory
-    /// leak will result, though this not considered unsound behavior.
-    ///
-    /// # Safety
-    ///
-    /// This function is unsafe because:
-    ///
-    /// 1. If the Core Foundation object instance is mutable and is visible outside of the Rust
-    ///    language boundary, usage of the object instance may result in undefined behavior the
-    ///    object is mutated while a reference has been obtained through [`Deref`]. If Rust's
-    ///    aliasing rules cannot be applied to the Core Foundation object instance (specifically
-    ///    that the memory the pointer points does not get mutated while a shared reference has been
-    ///    obtained through `Arc<T>`), it is **not** safe to use in any context.
-    /// 2. `cf` must be compatible with the implementation of `T`, which can only be verified
-    ///    through code inspection.
-    ///
-    /// [`Deref`]: core::ops::Deref
-    /// [`with_create_rule`]: Self::with_create_rule
-    /// [The Get Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-SW1
-    #[inline]
-    #[must_use]
-    pub unsafe fn with_get_rule(cf: NonNull<T::Raw>) -> Self {
-        {
-            let cf = cf.as_ptr().cast();
-            // Note: [`CFRetain`] is guaranteed to return its argument.
-            // SAFETY: `cf` is a non-null pointer to a [`CFTypeRef`].
-            let _ = unsafe { CFRetain(cf) };
-        }
         Self(cf.cast())
     }
 }
@@ -107,9 +66,9 @@ where
     #[inline]
     fn clone(&self) -> Self {
         let cf = self.0.cast();
-        // SAFETY: `self.0` is known to conform to all safety requirements given the prior
-        // construction of `self`.
-        unsafe { Self::with_get_rule(cf) }
+        // SAFETY: The creator of the smart pointer asserted `self.0` met all the safety criteria
+        // of an `Arc<T>` by constructing the smart pointer.
+        unsafe { T::from_get_rule(cf) }
     }
 }
 
@@ -120,7 +79,8 @@ where
     #[inline]
     fn from(value: Box<T>) -> Self {
         let cf = value.0;
-        // Don't let value drop (and release the value) because we're moving its retain into `Self`.
+        // Don't let `value` drop, causing `value.0` to be released, because its ownership of `cf`
+        // is being transferred to the new `Arc<T>`, which will release `cf` when dropped.
         forget(value);
         Self(cf)
     }

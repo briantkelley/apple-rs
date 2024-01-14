@@ -39,7 +39,8 @@ define_and_impl_type!(
     /// An abstract interface for working with a logically contiguous sequence of UTF-16 code units.
     ///
     /// The internal encoding may not be UTF-16, and the internal storage may not be contiguous.
-    String
+    String,
+    raw: __CFString
 );
 
 /// Specifies the byte order used to encode UTF-16 code units or UTF-32 code points.
@@ -256,12 +257,6 @@ pub enum SurrogateHalf {
     Low,
 }
 
-// SAFETY: [`__CFString`] is compatible with the polymorphic Core Foundation functions and the
-// [`CFString`] functions used by these bindings.
-unsafe impl ForeignFunctionInterface for String {
-    type Raw = __CFString;
-}
-
 // SAFETY: Core Foundation allows transferring ownership of strings across threads.
 unsafe impl Send for String {}
 
@@ -309,7 +304,7 @@ impl String {
 
         // SAFETY: The [`CFStringRef`] was just created so it's an exclusive pointer, it has a
         // retain that must be released, and [`String`] is a correct [`CFType`] implementation.
-        unsafe { Self::with_create_rule(cf) }.ok_or(FromBytesError(()))
+        unsafe { Self::try_from_create_rule(cf) }.ok_or(FromBytesError(()))
     }
 
     /// Returns a [`String`] object initialized by copying the UTF-8 code units from the string

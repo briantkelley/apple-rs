@@ -38,81 +38,223 @@ pub unsafe trait ForeignFunctionInterface {
     /// [`CFTypeRef`]: corefoundation_sys::CFTypeRef
     type Raw;
 
-    /// Places the newly created raw pointer with shared ownership of the object instance into an
-    /// `Arc<T>`.
+    /// `NULL`-checks the newly created but shared raw object instance pointer and places the
+    /// instance in an `Arc<T>`.
     ///
     /// The object will be released when its new `Arc<T>` is dropped, balancing the initial retain
-    /// from the create function.
+    /// rom the function following [The Create Rule][] that returned the raw pointer.
     ///
     /// # Safety
     ///
-    /// This function is unsafe because:
+    /// When calling this constructor, you must ensure all the following are true:
     ///
-    /// 1. If the Core Foundation object instance is mutable and is visible outside of the Rust
-    ///    language boundary, usage of the object instance may result in undefined behavior the
-    ///    object is mutated while a reference has been obtained through [`Deref`]. If Rust's
-    ///    aliasing rules cannot be applied to the Core Foundation object instance (specifically
-    ///    that the memory the pointer points does not get mutated while a shared reference has been
-    ///    obtained through `Arc<T>`), it is **not** safe to use in any context.
-    /// 2. If the object instance does not have a retain that must be balanced, it will be
+    /// 1. The pointer must be properly aligned.
+    /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
+    /// 3. You must enforce Rust’s aliasing rules if the lifetime provided by [`Arc<T>`] does not
+    ///    wholly reflect the actual lifetime of the data. In particular, while this [`Arc<T>`]
+    ///    exists, the memory the pointer points to must not get mutated.
+    /// 4. The pointer must point to an object instance compatible with the polymorphic Core
+    ///    Foundation functions and the bindings implemented by `T`.
+    /// 5. If the object instance does not have a retain that must be balanced, it will be
     ///    over-released, which may result in undefined behavior.
     ///
-    /// [`Deref`]: core::ops::Deref
     /// [The Create Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-103029
     #[inline]
-    unsafe fn with_create_rule(cf: *const Self::Raw) -> Option<Arc<Self>>
+    unsafe fn try_from_create_rule(cf: *const Self::Raw) -> Option<Arc<Self>>
     where
         Self: Sized,
     {
         NonNull::new(cf.cast_mut()).map(|cf| {
             // SAFETY: Caller asserts `cf` meets all safety requirements.
-            unsafe { Arc::with_create_rule(cf) }
+            unsafe { Self::from_create_rule(cf) }
         })
     }
 
-    /// Places the newly created raw pointer that has exclusive ownership of the object instance
-    /// into a `Box<T>`.
+    /// Places the newly created but shared raw object instance pointer in an `Arc<T>`.
+    ///
+    /// The object will be released when its new `Arc<T>` is dropped, balancing the initial retain
+    /// rom the function following [The Create Rule][] that returned the raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// When calling this constructor, you must ensure all the following are true:
+    ///
+    /// 1. The pointer must be properly aligned.
+    /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
+    /// 3. You must enforce Rust’s aliasing rules if the lifetime provided by [`Arc<T>`] does not
+    ///    wholly reflect the actual lifetime of the data. In particular, while this [`Arc<T>`]
+    ///    exists, the memory the pointer points to must not get mutated.
+    /// 4. The pointer must point to an object instance compatible with the polymorphic Core
+    ///    Foundation functions and the bindings implemented by `T`.
+    /// 5. If the object instance does not have a retain that must be balanced, it will be
+    ///    over-released, which may result in undefined behavior.
+    ///
+    /// [The Create Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-103029
+    #[inline]
+    #[must_use]
+    unsafe fn from_create_rule(cf: NonNull<Self::Raw>) -> Arc<Self>
+    where
+        Self: Sized,
+    {
+        // SAFETY: Caller asserts `cf` meets all safety requirements.
+        unsafe { Arc::with_create_rule(cf) }
+    }
+
+    /// `NULL`-checks the newly created raw pointer with exclusive ownership of the object instance
+    /// and places the instance in a `Box<T>`.
     ///
     /// The new `Box<T>` **must** have exclusive ownership of the object instance pointer. If the
     /// object instance can be accessed from another context (e.g., via global state, Core
     /// Foundation internals, etc.), or the object instance is otherwise not exclusively pointed to
-    /// by `cf`, use [`with_create_rule`] instead (use of this constructor with a shared object may
-    /// result in undefined behavior).
+    /// by `cf`, use [`try_from_create_rule`] instead (use of this constructor with a shared object
+    /// may result in undefined behavior).
     ///
     /// The object will be released when its new `Box<T>` is dropped, balancing the initial retain
     /// from the function following [The Create Rule][] that returned the raw pointer.
     ///
-    /// **Note:** If the object instance is immutable, use [`with_create_rule`] instead, even if the
-    /// pointer has exclusive ownership. Immutable objects do not benefit from exclusive ownership,
-    /// which enables mutable borrows. [`Arc<T>`] and [`Box<T>`] are used to encode Core
+    /// **Note:** If the object instance is immutable, use [`try_from_create_rule`] instead, even if
+    /// the pointer has exclusive ownership. Immutable objects do not benefit from exclusive
+    /// ownership, which enables mutable borrows. [`Arc<T>`] and [`Box<T>`] are used to encode Core
     /// Foundation's mutability rules into the type system, in addition to managing memory lifetime.
     ///
     /// # Safety
     ///
-    /// This function is unsafe because:
+    /// When calling this constructor, you must ensure all the following are true:
     ///
-    /// 1. If the Core Foundation object instance is not exclusively owned by the reference held by
-    ///    `cf`, usage of the object instance may result in undefined behavior the object is mutated
-    ///    while a reference has been obtained through [`Deref`], or if a mutable reference obtained
-    ///    through [`DerefMut`] is not actually unique. If the Core Foundation object instance is
-    ///    not exclusively owned by the `cf` pointer, use [`with_create_rule`] instead.
-    /// 2. If the object instance does not have a retain that must be balanced, it will be
+    /// 1. The pointer must be properly aligned.
+    /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
+    /// 3. You must enforce Rust’s aliasing rules if the lifetime provided by [`Box<T>`] does not
+    ///    wholly reflect the actual lifetime of the data. In particular, while this [`Box<T>`]
+    ///    exists, the memory the pointer points to must not get accessed (read or written) through
+    ///    any other pointer.
+    /// 4. The pointer must point to an object instance compatible with the polymorphic Core
+    ///    Foundation functions and the bindings implemented by `T`.
+    /// 5. If the object instance does not have a retain that must be balanced, it will be
     ///    over-released, which may result in undefined behavior.
     ///
-    /// [`Deref`]: core::ops::Deref
-    /// [`DerefMut`]: core::ops::DerefMut
-    /// [`with_create_rule`]: Self::with_create_rule
+    /// [`try_from_create_rule`]: Self::try_from_create_rule
     /// [The Create Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-103029
     #[inline]
-    unsafe fn with_create_rule_mut(cf: *mut Self::Raw) -> Option<Box<Self>>
+    unsafe fn try_from_create_rule_mut(cf: *mut Self::Raw) -> Option<Box<Self>>
     where
         Self: Sized,
     {
         NonNull::new(cf).map(|cf| {
             // SAFETY: Caller asserts `cf` meets all safety requirements.
-            unsafe { Box::with_create_rule(cf) }
+            unsafe { Self::from_create_rule_mut(cf) }
         })
     }
+
+    /// Places the newly created raw pointer with exclusive ownership of the object instance in a
+    /// `Box<T>`.
+    ///
+    /// The new `Box<T>` **must** have exclusive ownership of the object instance pointer. If the
+    /// object instance can be accessed from another context (e.g., via global state, Core
+    /// Foundation internals, etc.), or the object instance is otherwise not exclusively pointed to
+    /// by `cf`, use [`try_from_create_rule`] instead (use of this constructor with a shared object
+    /// may result in undefined behavior).
+    ///
+    /// The object will be released when its new `Box<T>` is dropped, balancing the initial retain
+    /// from the function following [The Create Rule][] that returned the raw pointer.
+    ///
+    /// **Note:** If the object instance is immutable, use [`try_from_create_rule`] instead, even if
+    /// the pointer has exclusive ownership. Immutable objects do not benefit from exclusive
+    /// ownership, which enables mutable borrows. [`Arc<T>`] and [`Box<T>`] are used to encode Core
+    /// Foundation's mutability rules into the type system, in addition to managing memory lifetime.
+    ///
+    /// # Safety
+    ///
+    /// When calling this constructor, you must ensure all the following are true:
+    ///
+    /// 1. The pointer must be properly aligned.
+    /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
+    /// 3. You must enforce Rust’s aliasing rules if the lifetime provided by [`Box<T>`] does not
+    ///    wholly reflect the actual lifetime of the data. In particular, while this [`Box<T>`]
+    ///    exists, the memory the pointer points to must not get accessed (read or written) through
+    ///    any other pointer.
+    /// 4. The pointer must point to an object instance compatible with the polymorphic Core
+    ///    Foundation functions and the bindings implemented by `T`.
+    /// 5. If the object instance does not have a retain that must be balanced, it will be
+    ///    over-released, which may result in undefined behavior.
+    ///
+    /// [`try_from_create_rule`]: Self::try_from_create_rule
+    /// [The Create Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-103029
+    #[inline]
+    #[must_use]
+    unsafe fn from_create_rule_mut(cf: NonNull<Self::Raw>) -> Box<Self>
+    where
+        Self: Sized,
+    {
+        // SAFETY: Caller asserts `cf` meets all safety requirements.
+        unsafe { Box::with_create_rule(cf) }
+    }
+
+    /// `NULL`-checks the existing, unowned shared raw object instance pointer obtained from a
+    /// function following [The Get Rule][] and places the instance in an `Arc<T>`.
+    ///
+    /// The object will be retained before constructing the new `Arc<T>`, and will be released when
+    /// the `Arc<T>` is dropped.
+    ///
+    /// # Safety
+    ///
+    /// When calling this constructor, you must ensure all the following are true:
+    ///
+    /// 1. The pointer must be properly aligned.
+    /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
+    /// 3. You must enforce Rust’s aliasing rules if the lifetime provided by [`Arc<T>`] does not
+    ///    wholly reflect the actual lifetime of the data. In particular, while this [`Arc<T>`]
+    ///    exists, the memory the pointer points to must not get mutated.
+    /// 4. The pointer must point to an object instance compatible with the polymorphic Core
+    ///    Foundation functions and the bindings implemented by `T`.
+    ///
+    /// [The Get Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-SW1
+    #[inline]
+    #[must_use]
+    unsafe fn try_from_get_rule(cf: *const Self::Raw) -> Option<Arc<Self>>
+    where
+        Self: Sized,
+    {
+        NonNull::new(cf.cast_mut()).map(|cf| {
+            // SAFETY: Caller asserts `cf` meets all safety requirements.
+            unsafe { Self::from_get_rule(cf) }
+        })
+    }
+
+    /// Places the existing, unowned shared raw object instance pointer obtained from a function
+    /// following [The Get Rule][] in an `Arc<T>`.
+    ///
+    /// The object will be retained before constructing the new `Arc<T>`, and will be released when
+    /// the `Arc<T>` is dropped.
+    ///
+    /// # Safety
+    ///
+    /// When calling this constructor, you must ensure all the following are true:
+    ///
+    /// 1. The pointer must be properly aligned.
+    /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
+    /// 3. You must enforce Rust’s aliasing rules if the lifetime provided by [`Arc<T>`] does not
+    ///    wholly reflect the actual lifetime of the data. In particular, while this [`Arc<T>`]
+    ///    exists, the memory the pointer points to must not get mutated.
+    /// 4. The pointer must point to an object instance compatible with the polymorphic Core
+    ///    Foundation functions and the bindings implemented by `T`.
+    ///
+    /// [The Get Rule]: https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-SW1
+    #[must_use]
+    unsafe fn from_get_rule(cf: NonNull<Self::Raw>) -> Arc<Self>
+    where
+        Self: Sized;
+
+    /// Decrements the reference count (retain count) of the foreign object-like type. If the
+    /// reference count reaches zero, the object-like type releases/frees its resources and
+    /// deallocates itself.
+    ///
+    /// # Safety
+    ///
+    /// After calling this associated function, the caller must ensure it **does not** use the
+    /// reference passed as the argument again. Use of the reference as unsound as the underlying
+    /// memory may have been freed. The argument type is a reference, not a move of `Self`, for ease
+    /// of use with [`Drop::drop`].
+    unsafe fn release(this: &mut Self);
 
     /// Gets the raw [`CFTypeRef`] pointer. This should only be used by binding implementations.
     ///

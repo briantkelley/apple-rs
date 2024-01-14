@@ -41,10 +41,8 @@ macro_rules! impl_rc {
 
             #[inline]
             fn deref(&self) -> &Self::Target {
-                // SAFETY: The pointer is properly aligned (we assume it was allocated by a
-                // conforming allocator), it is "dereferenceable", it points to an initialized
-                // instance of `T` (again, we assume it was initialized by its create function), and
-                // the smart pointer guarantees the data will live at least as long as itself.
+                // SAFETY: The creator of the smart pointer asserted all the [`NonNull::as_ref`]
+                // safety criteria were met by constructing the smart pointer.
                 unsafe { self.0.as_ref() }
             }
         }
@@ -65,9 +63,11 @@ macro_rules! impl_rc {
         {
             #[inline]
             fn drop(&mut self) {
-                let cf = self.0.as_ptr().cast();
-                // SAFETY: `cf` is a non-null pointer to a [`CFTypeRef`].
-                unsafe { CFRelease(cf) }
+                // SAFETY: The creator of the smart pointer asserted all the [`NonNull::as_mut`]
+                // safety criteria were met by constructing the smart pointer.
+                let cf = unsafe { self.0.as_mut() };
+                // SAFETY: `self` is not used after the call to `T::release`.
+                unsafe { T::release(cf) }
             }
         }
 
