@@ -10,7 +10,7 @@ This crate aims to provide idiomatic Rust bindings to Apple's `CoreFoundation` C
 at `$SDKROOT/System/Library/Frameworks/CoreFoundation.framework/Modules/module.modulemap`) that
 mirror [The Rust Standard Library](https://doc.rust-lang.org/std/) as closely as possible.
 
-## Design
+## Design Overview
 
 ### Downstream API Bindings
 
@@ -19,40 +19,14 @@ Foundation framework (e.g., `CoreGraphics`, `CoreText`). The facilities this cra
 idiomatic Rust API bindings for Core Foundation are available to crates implementing Rust API
 bindings for frameworks with Core Foundation-compatible types.
 
-`ForeignFunctionInterface` is the primary trait used to bridge the between the foreign function
-interface and Rust. It provides a facility to retrieve the `CFTypeRef` pointer from the Rust type
-for use in calling foreign functions. This trait **should not** be used by crates utilizing the Rust
-API bindings; it's intended only for crates *implementing* Rust API bindings. This is intentionally
-separate from `Object` so the FFI related functionality is not visible by default when using the
-`Object` interface.
+The `define_and_impl_type` macro defines a new opaque type to represent the foreign type. It also
+implements:
 
-The `define_and_impl_type!` macro defines a new type on which to implement Rust bindings for a Core
-Foundation-compatible type. A new type is required to implement the many of the standard traits, as
-the FFI type definition typically originates in a separate `-sys` crate.
-
-### Memory Management
-
-The `Box<T>` and `Arc<T>` smart pointers implemented by this crate fulfill the following
-requirements:
-
-* Are a true zero-cost abstraction.
-* Show Core Foundation objects are heap-allocated through the type system.
-* Combine Rust’s mutable references with Core Foundation’s mutable types.
-
-The type name `Box<T>` signals to the reader that `T` is heap-allocated and that the instance `T` is
-unique. Similarly, the type name `Arc<T>` indicates `T` is heap-allocated and that the instance `T`
-is shared with other parts of the program.
-
-Both types `Deref` to `T`, the Rust type implementing the Core Foundation API bindings, which is
-crucial in making the abstraction zero-cost. When the smart pointer is dereferenced by the compiler,
-it returns the Core Foundation pointer value as a reference to `T`, which can be passed directly
-through to the C API.
-
-The implementations of `Box<T>` and `Arc<T>` for Core Foundation are virtually identical, with the
-primary difference being `Box<T>` also implements `DerefMut`, `AsMut`, and `BorrowMut`. Therefore,
-`Box<T>` should only be used if the Core Foundation object instance a mutable type uniquely owned by
-the raw pointer (i.e., a `Create` or `Copy` function return the pointer). Otherwise, immutable types
-and objects that may be retained elsewhere should use `Arc<T>`.
+* `ForeignFunctionInterface` to bridge the between the foreign function interface and Rust. It
+  provides a facility to retrieve the `CFTypeRef` pointer from the Rust type for use in calling
+  foreign functions. This trait **should not** be used by crates utilizing the Rust API bindings;
+  it's intended only for crates *implementing* Rust API bindings.
+* `Object`, which identifies a type as compatible with the polymorphic Core Foundation functions.
 
 ### Signed/Unsigned Conversion
 

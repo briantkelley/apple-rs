@@ -1,31 +1,26 @@
 [package]
 authors.workspace = true
 categories.workspace = true
-description = "Idiomatic Rust bindings to Apple's CoreFoundation Clang module."
+description = "Support for building idiomatic Rust bindings for foreign heap-allocated, reference-counted objects."
 edition.workspace = true
 keywords = [
     "apple",
+    "arc",
     "core",
     "foundation",
     "ios",
     "mac",
     "macos",
+    "os",
+    "rc",
+    "release",
+    "retain",
 ]
 license.workspace = true
-name = "corefoundation"
+name = "retain-release"
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
-
-[dependencies]
-corefoundation-sys = { path = "../corefoundation-sys" }
-retain-release = { path = "../retain-release" }
-
-[features]
-default = ["std"]
-
-alloc = []
-std = ["alloc", "corefoundation-sys/std"]
 
 [lints]
 workspace = true

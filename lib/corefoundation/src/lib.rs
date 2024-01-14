@@ -17,9 +17,8 @@
 extern crate alloc;
 
 mod base;
-mod rc;
 pub mod string;
 
 pub use base::ffi;
 pub use base::object::Object;
-pub use rc::{boxed, sync};
+pub use retain_release::{boxed, sync};

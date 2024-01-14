@@ -21,6 +21,8 @@ dependency graph.
   support, XML property lists, URL resource access, and preferences.
 * [`dispatch`](lib/dispatch): Execute code concurrently on multicore hardware by submitting work to
   dispatch queues managed by the system.
+* [`retain-release`](lib/retain-release): Support for building idiomatic Rust bindings for foreign
+  heap-allocated, reference-counted objects. Used by [`corefoundation`](lib/corefoundation).
 
 **Raw Rust Bindings:**
 

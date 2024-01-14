@@ -6,6 +6,7 @@ members = [
     "lib/dispatch",
     "lib/dispatch-sys",
     "lib/os",
+    "lib/retain-release",
 ]
 resolver = "2"
 
