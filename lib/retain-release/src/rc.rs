@@ -199,14 +199,6 @@ macro_rules! impl_rc {
                 core::fmt::Pointer::fmt(&self.0, f)
             }
         }
-
-        // SAFETY: All of Apple's reference counting implementations are thread-safe, so if T is
-        // [`Send`], it's safe to transfer ownership to another thread.
-        unsafe impl<T> Send for $name<T> where T: $crate::ffi::ForeignFunctionInterface + Send {}
-
-        // SAFETY: All of Apple's reference counting implementations are thread-safe, so if T is
-        // [`Sync`], it's safe to use allow parallel reference counting operations across threads.
-        unsafe impl<T> Sync for $name<T> where T: $crate::ffi::ForeignFunctionInterface + Sync {}
     };
 }
 

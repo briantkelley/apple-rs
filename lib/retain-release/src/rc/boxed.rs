@@ -87,3 +87,13 @@ where
         unsafe { self.0.as_mut() }
     }
 }
+
+// SAFETY: `Box` is [`Send`] if `T` is [`Send`] because the instance of `T` is unaliased. Apple's
+// reference counting implementations are thread-safe, so `T` is the sole determining factor in
+// whether it's safe to transfer ownership to another thread.
+unsafe impl<T> Send for Box<T> where T: ForeignFunctionInterface + Send {}
+
+// SAFETY: `Box` is [`Sync`] if `T` is [`Sync`] because the instance of `T` is unaliased. Apple's
+// reference counting implementations are thread-safe, so `T` is the sole determining factor in
+// whether it's safe to use allow parallel reference counting operations across threads.
+unsafe impl<T> Sync for Box<T> where T: ForeignFunctionInterface + Sync {}

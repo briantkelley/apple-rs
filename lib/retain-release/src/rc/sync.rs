@@ -82,3 +82,30 @@ where
         Self(ptr)
     }
 }
+
+// SAFETY: `Arc` is [`Send`] if `T` is both [`Send`] and [`Sync`].
+//
+// `Arc` does not enable `T` to become [`Send`]. Consider a handle to a thread-local resource. If an
+// `Arc` was moved to another thread, the resource would likely leak. When the `Arc` is [`Drop`]ped,
+// closing the handle may cause a runtime error or prematurely destruct a resource in use by the
+// active thread. Therefore, [`Send`] is transitive, not additive.
+//
+// Implementing [`Send`] for `Arc` also requires that `T` be [`Sync`]. Consider a type with interior
+// mutability. After sending the [`Clone`] of an `Arc` to another thread, the `T` may be accessed by
+// two threads simultaneously. Therefore it is only safe to [`Send`] and `Arc` to another thread if
+// `T` supports synchronous access.
+//
+// Apple's reference counting implementations are thread-safe, so `T` is the sole determining factor
+// in whether it's safe to transfer ownership to another thread.
+unsafe impl<T> Send for Arc<T> where T: ForeignFunctionInterface + Send + Sync {}
+
+// SAFETY: `Arc` is [`Sync`] if `T` is both [`Send`] and [`Sync`].
+//
+// Implementing [`Sync`] for `Arc` also requires that `T` be [`Send`]. If an `&Arc<T>` is sent to
+// another thread, [`Clone`] can be used to obtain an `Arc<T>` owned by the other thread. If all
+// other `Arc<T>`s are [`Drop`]ped before this clone, `T` will [`Drop`] on the other thread due to
+// the [`Clone`] having effectively performed a [`Send`].
+//
+// Apple's reference counting implementations are thread-safe, so `T` is the sole determining factor
+// in whether it's safe to use allow parallel reference counting operations across threads.
+unsafe impl<T> Sync for Arc<T> where T: ForeignFunctionInterface + Send + Sync {}
