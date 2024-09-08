@@ -13,7 +13,6 @@ mod _sys;
 pub mod c;
 #[cfg(feature = "experimental")]
 pub mod io;
-#[cfg(feature = "experimental")]
 pub mod posix;
 #[cfg(feature = "experimental")]
 pub mod sys;

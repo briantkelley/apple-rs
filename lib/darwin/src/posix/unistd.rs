@@ -1,19 +1,30 @@
+//! Miscellaneous standard symbolic constants, functions, and types.
+
+#[cfg(feature = "experimental")]
 use crate::_sys::posix::unistd::{
     self, confstr, mkdtemp, mkstemp, rmdir, _CS_DARWIN_USER_TEMP_DIR,
 };
+#[cfg(feature = "experimental")]
 use crate::c::errno::{self, check, Error};
+#[cfg(feature = "experimental")]
 use crate::io::{FromRawFd, OwnedFd};
+#[cfg(feature = "experimental")]
 use crate::posix::fcntl::Open;
+#[cfg(feature = "experimental")]
 use core::ffi::{c_char, CStr};
+#[cfg(feature = "experimental")]
 use core::num::{NonZeroI32, NonZeroUsize};
+#[cfg(feature = "experimental")]
 use core::ptr;
 
+#[cfg(feature = "experimental")]
 #[derive(Clone, Copy, Debug)]
 #[repr(i32)]
 pub enum ConfigurationString {
     TemporaryDirectory = _CS_DARWIN_USER_TEMP_DIR,
 }
 
+#[cfg(feature = "experimental")]
 impl ConfigurationString {
     /// Get the string value of the configurable variable.
     ///
@@ -56,6 +67,7 @@ impl ConfigurationString {
 /// # Panics
 ///
 /// Panics if `template` is not nul-terminated or does not end with one or more `X`s.
+#[cfg(feature = "experimental")]
 pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, NonZeroI32> {
     let _ = create_unique_retry_driver(template, |template| {
         // SAFETY: template is guaranteed to be a valid mutable buffer. create_unique_retry_driver
@@ -87,6 +99,7 @@ pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, 
 /// # Panics
 ///
 /// Panics if `template` is not nul-terminated or does not end with one or more `X`s.
+#[cfg(feature = "experimental")]
 pub fn create_unique_file_and_open(template: &mut [u8]) -> Result<OwnedFd, NonZeroI32> {
     create_unique_retry_driver(template, |template| {
         // SAFETY: template is guaranteed to be a valid mutable buffer. create_unique_retry_driver
@@ -98,6 +111,7 @@ pub fn create_unique_file_and_open(template: &mut [u8]) -> Result<OwnedFd, NonZe
     .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
 }
 
+#[cfg(feature = "experimental")]
 fn create_unique_retry_driver(
     template: &mut [u8],
     mut mktemp: impl FnMut(*mut c_char) -> i32,
@@ -119,6 +133,7 @@ fn create_unique_retry_driver(
     }
 }
 
+#[cfg(feature = "experimental")]
 pub fn remove_directory(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
     let path = path.as_ref().as_ptr();
     // It is not possible to recover from `rmdir(2)` errors as the directory removal may have
@@ -130,6 +145,7 @@ pub fn remove_directory(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
     Ok(())
 }
 
+#[cfg(feature = "experimental")]
 pub fn unlink(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
     let path = path.as_ref().as_ptr();
     // It is not possible to recover from `unlink(2)` errors as the unlink may have actually
@@ -141,6 +157,7 @@ pub fn unlink(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
     Ok(())
 }
 
+#[cfg(feature = "experimental")]
 #[cfg(test)]
 mod tests {
     use super::{
