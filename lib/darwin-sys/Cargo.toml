@@ -1,0 +1,19 @@
+[package]
+authors.workspace = true
+categories.workspace = true
+description = "Direct FFI bindings to the C interfaces expressed in Apple's Darwin Clang module."
+edition.workspace = true
+keywords = [
+    "apple",
+    "darwin",
+    "iOS",
+    "macOS",
+]
+license.workspace = true
+name = "darwin-sys"
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true

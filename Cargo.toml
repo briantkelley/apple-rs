@@ -4,6 +4,7 @@ members = [
     "lib/corefoundation",
     "lib/corefoundation-sys",
     "lib/darwin",
+    "lib/darwin-sys",
     "lib/dispatch",
     "lib/dispatch-sys",
     "lib/os",
