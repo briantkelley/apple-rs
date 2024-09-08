@@ -16,6 +16,7 @@ use core::ffi::{c_char, CStr};
 use core::num::{NonZeroI32, NonZeroUsize};
 #[cfg(feature = "experimental")]
 use core::ptr;
+pub mod sys_cfg;
 
 #[cfg(feature = "experimental")]
 #[derive(Clone, Copy, Debug)]
