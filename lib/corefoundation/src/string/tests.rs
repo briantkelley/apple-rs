@@ -2,7 +2,6 @@
 
 use crate::cfstr;
 use crate::string::String;
-use core::mem::align_of;
 
 mod create;
 mod get_bytes;
@@ -149,7 +148,10 @@ fn as_str() {
     assert_eq!(EMPTY_STRING.as_str(), Cow::Borrowed(""));
 
     assert_eq!(POLAR_BEAR.as_str(), "🐻‍❄️");
-    assert_eq!(POLAR_BEAR.as_str(), Cow::Owned::<'_, str>("🐻‍❄️".to_owned()));
+    assert_eq!(
+        POLAR_BEAR.as_str(),
+        Cow::Owned::<'_, str>("🐻‍❄️".to_owned())
+    );
 
     assert_eq!(cfstr!("Hello, World!").as_str(), "Hello, World!");
     assert_eq!(

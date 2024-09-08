@@ -3,7 +3,6 @@ use crate::string::{
     FromUtfByteOrder, GetBytesByteOrder, GetBytesEncoding, GetBytesLossyReader, GetBytesReader,
     GetBytesReaderSummary, GetBytesStrReader, GetBytesStrReplacement, String,
 };
-use core::mem::size_of;
 
 const POLAR_BEAR_UTF16_CODE_UNITS: [u16; 5] = [0xd83d, 0xdc3b, 0x200d, 0x2744, 0xfe0f];
 

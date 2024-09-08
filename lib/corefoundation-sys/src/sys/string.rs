@@ -102,7 +102,7 @@ extern "C" {
     /// start or end.
     ///
     /// Setting `isExternalRepresentation` causes any extra bytes that would allow the data to be
-    /// made persistent to be included; for instance, the Unicode BOM. Note that CFString prepends
+    /// made persistent to be included; for instance, the Unicode BOM. Note that `CFString` prepends
     /// UTF encoded data with the Unicode BOM <http://www.unicode.org/faq/utf_bom.html>  when
     /// generating external representation if the target encoding allows. It's important to note
     /// that only UTF-8, UTF-16, and UTF-32 define the handling of the byte order mark character,

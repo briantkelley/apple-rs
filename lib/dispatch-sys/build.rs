@@ -16,11 +16,9 @@ fn main() -> ExitCode {
 
     if !is_truthy(input_env_var("NO_DISPATCH_ONCE_INLINE_FASTPATH")) {
         let target_arch_is_x86_or_x86_64 = input_env_var("CARGO_CFG_TARGET_ARCH")
-            .map(|arch| arch == "x86_64" || arch == "x86")
-            .unwrap_or_default();
-        let target_vendor_is_apple = input_env_var("CARGO_CFG_TARGET_VENDOR")
-            .map(|vendor| vendor == "apple")
-            .unwrap_or_default();
+            .is_some_and(|arch| arch == "x86_64" || arch == "x86");
+        let target_vendor_is_apple =
+            input_env_var("CARGO_CFG_TARGET_VENDOR").is_some_and(|vendor| vendor == "apple");
 
         if target_arch_is_x86_or_x86_64 || target_vendor_is_apple {
             println!("cargo:rustc-cfg=feature=\"dispatch_once_inline_fastpath\"");
@@ -42,10 +40,8 @@ fn is_truthy<T>(value: Option<T>) -> bool
 where
     T: AsRef<str>,
 {
-    value
-        .map(|value| {
-            let value = value.as_ref();
-            value == "1" || value.eq_ignore_ascii_case("true") || value.eq_ignore_ascii_case("yes")
-        })
-        .unwrap_or_default()
+    value.is_some_and(|value| {
+        let value = value.as_ref();
+        value == "1" || value.eq_ignore_ascii_case("true") || value.eq_ignore_ascii_case("yes")
+    })
 }

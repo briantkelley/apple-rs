@@ -340,7 +340,12 @@ macro_rules! cfstr {
                 isa: unsafe { &$crate::string::constant::__CFConstantStringClassReference },
                 flags: $crate::string::constant::_ASCII_FLAGS,
                 str: UTF8.as_ptr(),
-                length: ASCII_LEN as isize,
+                length: {
+                    // LINT: Cannot wrap. Rust guarantees all allocations have `size <= isize::MAX`.
+                    #[allow(clippy::cast_possible_wrap)]
+                    let len = ASCII_LEN as isize;
+                    len
+                },
             }
         } else {
             $crate::string::constant::__NSConstantString {
@@ -349,7 +354,12 @@ macro_rules! cfstr {
                 isa: unsafe { &$crate::string::constant::__CFConstantStringClassReference },
                 flags: $crate::string::constant::_UTF16_FLAGS,
                 str: UTF16.as_ptr().cast(),
-                length: UTF16_LEN as isize,
+                length: {
+                    // LINT: Cannot wrap. Rust guarantees all allocations have `size <= isize::MAX`.
+                    #[allow(clippy::cast_possible_wrap)]
+                    let len = UTF16_LEN as isize;
+                    len
+                },
             }
         };
 

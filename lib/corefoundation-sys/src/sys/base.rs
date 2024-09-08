@@ -37,7 +37,7 @@ extern "C" {
 
     /// This allocator uses `malloc()`, `realloc()`, and `free()`. This should not be generally
     /// used; stick to [`kCFAllocatorDefault`] whenever possible. This allocator is useful as the
-    /// `bytesDeallocator`` in `CFData` or `contentsDeallocator` in `CFString` where the memory was
+    /// `bytesDeallocator` in `CFData` or `contentsDeallocator` in `CFString` where the memory was
     /// obtained as a result of `malloc()` type functions.
     pub static kCFAllocatorMalloc: CFAllocatorRef;
 

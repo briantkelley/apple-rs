@@ -6,7 +6,6 @@ use crate::ffi::ForeignFunctionInterface;
 use crate::sync::Arc;
 use core::ffi::CStr;
 use core::fmt::{self, Display, Formatter};
-use core::mem::size_of;
 use core::num::NonZeroU8;
 use core::ops::{Range, RangeBounds};
 use core::ptr;
@@ -1045,7 +1044,7 @@ fn alloc_error(utf16_len: usize) -> Arc<String> {
     // the buffer and the buffer length.
     const STRING_OBJECT_SIZE: usize = 4 * size_of::<usize>();
     // [`CFString`] object instances have pointer alignment.
-    const STRING_OBJECT_ALIGN: usize = core::mem::align_of::<*const ()>();
+    const STRING_OBJECT_ALIGN: usize = align_of::<*const ()>();
 
     // UB: Cannot overflow because the number of bytes is representable by [`usize`].
     let buf_len = utf16_len.wrapping_mul(2);

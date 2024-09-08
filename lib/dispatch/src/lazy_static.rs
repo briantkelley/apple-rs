@@ -112,7 +112,7 @@ where
         let (name, value): (&str, &dyn Debug) = if pending {
             // SAFETY: See above SAFETY comment.
             ("initialize", unsafe {
-                (&*self.payload.get()).initialize.assume_init_ref()
+                (*self.payload.get()).initialize.assume_init_ref()
             })
         } else {
             ("value", &**self)

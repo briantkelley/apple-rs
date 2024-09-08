@@ -6,7 +6,6 @@ use super::{
 };
 use crate::cfstr;
 use crate::string::{CharacterSet, FromUtfByteOrder, String};
-use core::mem::size_of;
 use core::slice;
 
 #[test]

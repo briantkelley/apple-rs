@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [ '1.74', 'stable' ]
+        toolchain: [ '1.80', 'stable' ]
 
   apple-darwin-test:
     name: Test stable-x86_64-apple-darwin

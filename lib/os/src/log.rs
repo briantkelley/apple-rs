@@ -6,7 +6,6 @@ use crate::sys::log::{
 use crate::sys::trace_base::__dso_handle;
 use crate::trace_base::LogString;
 use core::fmt::{self, Debug, Formatter};
-use core::mem::size_of;
 
 #[derive(Clone, Copy)]
 enum Kind {
