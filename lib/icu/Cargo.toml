@@ -1,0 +1,23 @@
+[package]
+authors.workspace = true
+categories.workspace = true
+description = "Idiomatic Rust bindings to Apple's ICU Clang module."
+edition.workspace = true
+keywords = [
+    "apple",
+    "darwin",
+    "ios",
+    "macos",
+    "unicode",
+]
+license.workspace = true
+name = "icu"
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+icu-sys = { path = "../icu-sys" }
+
+[lints]
+workspace = true

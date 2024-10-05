@@ -21,6 +21,9 @@ dependency graph.
   support, XML property lists, URL resource access, and preferences.
 * [`dispatch`](lib/dispatch): Execute code concurrently on multicore hardware by submitting work to
   dispatch queues managed by the system.
+* [`icu`](lib/icu): Source-compatible, drop in replacement for various
+  [`unicode-rs`](https://github.com/unicode-rs) crates for the purpose of reducing binary size by
+  relying on system-provided Unicode databases.
 * [`retain-release`](lib/retain-release): Support for building idiomatic Rust bindings for foreign
   heap-allocated, reference-counted objects. Used by [`corefoundation`](lib/corefoundation).
 
