@@ -30,6 +30,10 @@ dependency graph.
   module (located at `$SDKROOT/System/Library/Frameworks/CoreFoundation.framework/Modules/module.modulemap`).
 * [`dispatch-sys`](lib/dispatch-sys): Raw Rust bindings to Apple's Dispatch Clang module (located at
   `$SDKROOT/usr/include/dispatch/module.modulemap`).
+* [`icu-sys`](lib/icu-sys): Raw Rust bindings to Apple's ICU Clang module (located at
+  `$SDKROOT/usr/include/unicode/module.modulemap`, or in the Apple OSS Distributions
+  [ICU](https://github.com/apple-oss-distributions/ICU/blob/ICU-74000.403/modules/ICU.modulemap)
+  GitHub project).
 
 **Experimental Rust Bindings:**
 

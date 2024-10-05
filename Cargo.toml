@@ -7,6 +7,7 @@ members = [
     "lib/darwin-sys",
     "lib/dispatch",
     "lib/dispatch-sys",
+    "lib/icu-sys",
     "lib/os",
     "lib/retain-release",
 ]
