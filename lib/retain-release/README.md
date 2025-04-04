@@ -9,7 +9,7 @@ pointer type with reference counting semantics and the native Rust type implemen
 The trait is straightforward to implement:
 
 * Specify the type of the foreign interface object pointer with `Raw`.
-* Implement the retain operation in `from_borrowed_ptr`.
+* Implement the retain operation in `from_unowned_ptr`.
 * Implement the release operation in `release`.
 
 ```rust
@@ -20,7 +20,7 @@ use retain_release::sync::Arc;
 impl ForeignFunctionInterface for RustBindings {
     type Raw = ForeignType;
 
-    unsafe fn from_borrowed_ptr(ptr: NonNull<Self::Raw>) -> Arc<Self>
+    unsafe fn from_unowned_ptr(ptr: NonNull<Self::Raw>) -> Arc<Self>
     where
         Self: Sized,
     {
@@ -41,14 +41,14 @@ benefits of Rust's well-defined aliasing rules (assuming the smart pointer safet
 be met).
 
 ```rust
-use retain_release::ffi::ForeignFunctionInterface;
 use retain_release::boxed::Box;
+use retain_release::ffi::ForeignFunctionInterface;
 use retain_release::sync::Arc;
 
 impl RustBindings {
     fn current() -> Arc<Self> {
         let ptr = unsafe { foreign_type_get_current() };
-        unsafe { Self::try_from_borrowed_ptr(ptr) }.unwrap()
+        unsafe { Self::try_from_unowned_ptr(ptr) }.unwrap()
     }
 
     fn with_context(ctx: *const ()) -> Option<Box<Self>> {
@@ -59,7 +59,7 @@ impl RustBindings {
 ```
 
 Use `as_ptr` and `as_mut_ptr` to get the foreign interface object pointer when calling foreign
-interface functions. Note that a mutable reference can only be obtained through `Box<T>`, which
+interface functions. Note that a mutable reference can only be obtained through `Box<T>`, which is
 constructed using the [`from_owned_mut_ptr`] and [`try_from_owned_mut_ptr`] associated functions, so
 the smart pointer type is also used to specify the mutability of the foreign type.
 
@@ -84,12 +84,8 @@ crates *implementing* Rust API bindings.
 
 ## Memory Management
 
-The `Box<T>` and `Arc<T>` smart pointers implemented by this crate fulfill the following
-requirements:
-
-* Are a true zero-cost abstraction.
-* Show foreign interface objects are heap-allocated through the type system.
-* Combine Rust's mutable references with Apple's immutable/mutable type hierarchy.
+The `Box<T>` and `Arc<T>` smart pointers implemented by this crate are a true zero-cost abstraction
+and support Apple's immutable/mutable type hierarchies with Rust's reference semantics.
 
 The type name `Box<T>` signals to the reader that `T` is heap-allocated and that the instance `T` is
 unique. Similarly, the type name `Arc<T>` indicates `T` is heap-allocated and that the instance `T`

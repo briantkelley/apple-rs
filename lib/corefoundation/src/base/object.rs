@@ -43,7 +43,7 @@ macro_rules! define_and_impl_type {
             type Raw = $raw_ty;
 
             #[inline]
-            unsafe fn from_borrowed_ptr(
+            unsafe fn from_unowned_ptr(
                 ptr: core::ptr::NonNull<Self::Raw>
             ) -> $crate::sync::Arc<Self>
             where

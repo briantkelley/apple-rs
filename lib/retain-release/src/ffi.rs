@@ -5,7 +5,7 @@ use crate::boxed::Box;
 use crate::sync::Arc;
 use core::ptr::NonNull;
 
-/// A trait for use in bridging the between a foreign function interface with reference counting
+/// A trait for use in bridging between a foreign function interface with reference counting
 /// semantics and Rust.
 ///
 /// This trait **should not** be used by crates utilizing Rust API bindings; it's intended only for
@@ -15,8 +15,8 @@ pub trait ForeignFunctionInterface {
     /// trait provides bindings.
     type Raw;
 
-    /// `NULL`-checks the newly created but shared raw object instance pointer and places the
-    /// instance in an [`Arc<T>`].
+    /// `NULL`-checks the shared (and immutable) raw object instance pointer and places the instance
+    /// in an [`Arc<T>`].
     ///
     /// The object will be released when the returned [`Arc<T>`] is dropped, relinquishing the
     /// ownership that was transferred to the `Arc<T>` by the caller.
@@ -28,12 +28,15 @@ pub trait ForeignFunctionInterface {
     /// 1. The pointer must be properly aligned.
     /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
     /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Arc<T>`] does not
-    ///    wholly reflect the actual lifetime of the data. In particular, while this [`Arc<T>`]
-    ///    exists, the memory the pointer points to must not get mutated.
+    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`] or
+    ///    any [`clone`]s exist, the memory the pointer points to must not get mutated.
     /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
     ///    instance of `T`.
-    /// 5. If the object instance does not have a retain that must be balanced, it will be
-    ///    over-released, which may result in undefined behavior.
+    ///
+    /// If the object instance does not have a retain that must be balanced, it will be
+    /// over-released, which may result in undefined behavior.
+    ///
+    /// [`clone`]: [`Arc<T>::clone`]
     #[inline]
     unsafe fn try_from_owned_ptr(ptr: *const Self::Raw) -> Option<Arc<Self>>
     where
@@ -45,7 +48,7 @@ pub trait ForeignFunctionInterface {
         })
     }
 
-    /// Places the newly created but shared raw object instance pointer in an [`Arc<T>`].
+    /// Places the shared (and immutable) raw object instance pointer in an [`Arc<T>`].
     ///
     /// The object will be released when the returned [`Arc<T>`] is dropped, relinquishing the
     /// ownership that was transferred to the `Arc<T>` by the caller.
@@ -57,12 +60,15 @@ pub trait ForeignFunctionInterface {
     /// 1. The pointer must be properly aligned.
     /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
     /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Arc<T>`] does not
-    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`]
-    ///    exists, the memory the pointer points to must not get mutated.
+    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`] or
+    ///    any [`clone`]s exist, the memory the pointer points to must not get mutated.
     /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
     ///    instance of `T`.
-    /// 5. If the object instance does not have a retain that must be balanced, it will be
-    ///    over-released, which may result in undefined behavior.
+    ///
+    /// If the object instance does not have a retain that must be balanced, it will be
+    /// over-released, which may result in undefined behavior.
+    ///
+    /// [`clone`]: Arc::clone
     #[inline]
     #[must_use]
     unsafe fn from_owned_ptr(ptr: NonNull<Self::Raw>) -> Arc<Self>
@@ -73,8 +79,8 @@ pub trait ForeignFunctionInterface {
         unsafe { Arc::from_owned_ptr(ptr) }
     }
 
-    /// `NULL`-checks the newly created, unique raw object instance pointer and places the
-    /// instance in a [`Box<T>`].
+    /// `NULL`-checks the unique (and mutable) raw object instance pointer and places the instance
+    /// in a [`Box<T>`].
     ///
     /// The new [`Box<T>`] **must** have exclusive ownership of the object instance pointer. If the
     /// object instance can be accessed in another context (e.g., global state), or the object
@@ -95,13 +101,14 @@ pub trait ForeignFunctionInterface {
     /// 1. The pointer must be properly aligned.
     /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
     /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Box<T>`] does not
-    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Box<T>`]
-    ///    exists, the memory the pointer points to must not get accessed (read or written) through
-    ///    any other pointer.
+    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Box<T>`] or
+    ///    [`Arc<T>`]s created from the `Box<T>` exist, the memory the pointer points to must not be
+    ///    accessed (read or written) through any other pointer.
     /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
     ///    instance of `T`.
-    /// 5. If the object instance does not have a retain that must be balanced, it will be
-    ///    over-released, which may result in undefined behavior.
+    ///
+    /// If the object instance does not have a retain that must be balanced, it will be
+    /// over-released, which may result in undefined behavior.
     ///
     /// [`try_from_owned_ptr`]: Self::try_from_owned_ptr
     #[inline]
@@ -115,7 +122,7 @@ pub trait ForeignFunctionInterface {
         })
     }
 
-    /// Places the newly created, unique raw object instance pointer in a [`Box<T>`].
+    /// Places the unique (and mutable) raw object instance pointer in a [`Box<T>`].
     ///
     /// The new [`Box<T>`] **must** have exclusive ownership of the object instance pointer. If the
     /// object instance can be accessed in another context (e.g., global state), or the object
@@ -136,13 +143,14 @@ pub trait ForeignFunctionInterface {
     /// 1. The pointer must be properly aligned.
     /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
     /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Box<T>`] does not
-    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Box<T>`]
-    ///    exists, the memory the pointer points to must not get accessed (read or written) through
-    ///    any other pointer.
+    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Box<T>`] or
+    ///    [`Arc<T>`]s created from the `Box<T>` exist, the memory the pointer points to must not be
+    ///    accessed (read or written) through any other pointer.
     /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
     ///    instance of `T`.
-    /// 5. If the object instance does not have a retain that must be balanced, it will be
-    ///    over-released, which may result in undefined behavior.
+    ///
+    /// If the object instance does not have a retain that must be balanced, it will be
+    /// over-released, which may result in undefined behavior.
     ///
     /// [`from_owned_ptr`]: Self::from_owned_ptr
     #[inline]
@@ -155,7 +163,40 @@ pub trait ForeignFunctionInterface {
         unsafe { Box::from_owned_mut_ptr(ptr) }
     }
 
-    /// `NULL`-checks a "borrowed" raw object instance pointer, adds a reference count, and places
+    /// `NULL`-checks the shared (and immutable) unowned raw object instance pointer, adds a
+    /// reference count, and places the instance in an [`Arc<T>`].
+    ///
+    /// The object is retained before constructing the returned [`Arc<T>`], and the object will be
+    /// released when the returned `Arc<T>` is dropped.
+    ///
+    /// # Safety
+    ///
+    /// When calling this constructor, you must ensure all the following are true:
+    ///
+    /// 1. The pointer must be properly aligned.
+    /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
+    /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Arc<T>`] does not
+    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`] or
+    ///    any [`clone`]s exist, the memory the pointer points to must not get mutated.
+    /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
+    ///    instance of `T`.
+    ///
+    /// If the object instance has a retain that must be balanced, it will be over-retained, which
+    /// may result in a memory leak (though Rust does not consider leaks to be a safety related).
+    ///
+    /// [`clone`]: [`Arc<T>::clone`]
+    #[inline]
+    unsafe fn try_from_unowned_ptr(ptr: *const Self::Raw) -> Option<Arc<Self>>
+    where
+        Self: Sized,
+    {
+        NonNull::new(ptr.cast_mut()).map(|ptr| {
+            // SAFETY: Caller asserts `ptr` meets all safety requirements.
+            unsafe { Self::from_unowned_ptr(ptr) }
+        })
+    }
+
+    /// Adds a reference count to the shared (and immutable) raw object instance pointer and places
     /// the instance in an [`Arc<T>`].
     ///
     /// The object is retained before constructing the returned [`Arc<T>`], and the object will be
@@ -168,40 +209,17 @@ pub trait ForeignFunctionInterface {
     /// 1. The pointer must be properly aligned.
     /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
     /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Arc<T>`] does not
-    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`]
-    ///    exists, the memory the pointer points to must not get mutated.
+    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`] or
+    ///    any [`clone`]s exist, the memory the pointer points to must not get mutated.
     /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
     ///    instance of `T`.
-    #[inline]
-    unsafe fn try_from_borrowed_ptr(ptr: *const Self::Raw) -> Option<Arc<Self>>
-    where
-        Self: Sized,
-    {
-        NonNull::new(ptr.cast_mut()).map(|ptr| {
-            // SAFETY: Caller asserts `ptr` meets all safety requirements.
-            unsafe { Self::from_borrowed_ptr(ptr) }
-        })
-    }
-
-    /// Adds a reference count to the "borrowed" raw object instance pointer and places the instance
-    /// in an [`Arc<T>`].
     ///
-    /// The object is retained before constructing the returned [`Arc<T>`], and the object will be
-    /// released when the returned `Arc<T>` is dropped.
+    /// If the object instance has a retain that must be balanced, it will be over-retained, which
+    /// may result in a memory leak (though Rust does not consider leaks to be a safety related).
     ///
-    /// # Safety
-    ///
-    /// When calling this constructor, you must ensure all the following are true:
-    ///
-    /// 1. The pointer must be properly aligned.
-    /// 2. The pointer must point to an initialized instance of [`Self::Raw`].
-    /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Arc<T>`] does not
-    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`]
-    ///    exists, the memory the pointer points to must not get mutated.
-    /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
-    ///    instance of `T`.
+    /// [`clone`]: [`Arc<T>::clone`]
     #[must_use]
-    unsafe fn from_borrowed_ptr(ptr: NonNull<Self::Raw>) -> Arc<Self>
+    unsafe fn from_unowned_ptr(ptr: NonNull<Self::Raw>) -> Arc<Self>
     where
         Self: Sized;
 

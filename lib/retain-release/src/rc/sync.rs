@@ -1,4 +1,4 @@
-//! A pointer type that provides memory management for shared object instances.
+//! A pointer type that provides memory management for shared (and immutable) object instances.
 //!
 //! An [`Arc<T>`] expresses shared ownership of an object type. The smart pointer releases its
 //! reference count on the object instance when dropped.
@@ -9,7 +9,7 @@ use crate::rc::impl_rc;
 use core::mem::forget;
 use core::ptr::NonNull;
 
-/// A thread-safe reference-counting pointer for an object instance.
+/// A thread-safe reference-counting pointer for an immutable object instance.
 ///
 /// An `Arc<T>` provides shared ownership of an object instance, and releases the object instance
 /// when dropped.
@@ -29,7 +29,7 @@ impl<T> Arc<T>
 where
     T: ForeignFunctionInterface,
 {
-    /// Constructs a new `Arc<T>` from a raw, non-null, owned object instance pointer.
+    /// Constructs a new `Arc<T>` from a raw, non-null, owned immutable object instance pointer.
     ///
     /// The object will be released when the new `Arc<T>` is dropped, relinquishing the ownership
     /// that was transferred to the `Arc<T>` by the caller.
@@ -41,12 +41,15 @@ where
     /// 1. The pointer must be properly aligned.
     /// 2. The pointer must point to an initialized instance of `T::Raw`.
     /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Arc<T>`] does not
-    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`]
-    ///    exists, the memory the pointer points to must not get mutated.
+    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Arc<T>`] or
+    ///    any [`clone`]s exist, the memory the pointer points to must not get mutated.
     /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
     ///    instance of `T`.
-    /// 5. If the object instance does not have a retain that must be balanced, it will be
-    ///    over-released, which may result in undefined behavior.
+    ///
+    /// If the object instance does not have a retain that must be balanced, it will be over
+    /// released, which may result in undefined behavior.
+    ///
+    /// [`clone`]: [`Self::clone`]
     #[inline]
     #[must_use]
     pub const unsafe fn from_owned_ptr(ptr: NonNull<T::Raw>) -> Self {
@@ -65,7 +68,7 @@ where
         let ptr = self.0.cast();
         // SAFETY: The creator of the smart pointer asserted `self.0` met all the safety criteria
         // of an `Arc<T>` by constructing the smart pointer.
-        unsafe { T::from_borrowed_ptr(ptr) }
+        unsafe { T::from_unowned_ptr(ptr) }
     }
 }
 
@@ -94,9 +97,6 @@ where
 // mutability. After sending the [`Clone`] of an `Arc` to another thread, the `T` may be accessed by
 // two threads simultaneously. Therefore it is only safe to [`Send`] and `Arc` to another thread if
 // `T` supports synchronous access.
-//
-// Apple's reference counting implementations are thread-safe, so `T` is the sole determining factor
-// in whether it's safe to transfer ownership to another thread.
 unsafe impl<T> Send for Arc<T> where T: ForeignFunctionInterface + Send + Sync {}
 
 // SAFETY: `Arc` is [`Sync`] if `T` is both [`Send`] and [`Sync`].
@@ -105,7 +105,4 @@ unsafe impl<T> Send for Arc<T> where T: ForeignFunctionInterface + Send + Sync {
 // another thread, [`Clone`] can be used to obtain an `Arc<T>` owned by the other thread. If all
 // other `Arc<T>`s are [`Drop`]ped before this clone, `T` will [`Drop`] on the other thread due to
 // the [`Clone`] having effectively performed a [`Send`].
-//
-// Apple's reference counting implementations are thread-safe, so `T` is the sole determining factor
-// in whether it's safe to use allow parallel reference counting operations across threads.
 unsafe impl<T> Sync for Arc<T> where T: ForeignFunctionInterface + Send + Sync {}

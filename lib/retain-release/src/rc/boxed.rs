@@ -1,4 +1,5 @@
-//! A pointer type that provides memory management for uniquely owned object instances.
+//! A pointer type that provides memory management for uniquely owned (and mutable) object
+//! instances.
 //!
 //! A [`Box<T>`] expresses exclusive ownership of an object type. The smart pointer releases its
 //! reference count on the object instance when dropped.
@@ -9,7 +10,7 @@ use core::borrow::BorrowMut;
 use core::ops::DerefMut;
 use core::ptr::NonNull;
 
-/// An owned (i.e., exclusive) pointer for an object instance.
+/// An owned (i.e., exclusive) pointer for a mutable object instance.
 ///
 /// A `Box<T>` provides shared ownership of an object instance, and releases the object instance
 /// when dropped.
@@ -21,7 +22,8 @@ impl<T> Box<T>
 where
     T: ForeignFunctionInterface,
 {
-    /// Constructs a new `Box<T>` from a raw, non-null uniquely owned object instance pointer.
+    /// Constructs a new `Box<T>` from a raw, non-null uniquely owned mutable object instance
+    /// pointer.
     ///
     /// The new [`Box<T>`] **must** have exclusive ownership of the object instance pointer. If the
     /// object instance can be accessed in another context (e.g., global state), or the object
@@ -38,13 +40,14 @@ where
     /// 1. The pointer must be properly aligned.
     /// 2. The pointer must point to an initialized instance of `T::Raw`.
     /// 3. You must enforce Rust's aliasing rules if the lifetime provided by [`Box<T>`] does not
-    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Box<T>`]
-    ///    exists, the memory the pointer points to must not get accessed (read or written) through
-    ///    any other pointer.
+    ///    wholly reflect the actual lifetime of the data. In particular, while the [`Box<T>`] or
+    ///    [`Arc<T>`]s created from the `Box<T>` exist, the memory the pointer points to must not be
+    ///    accessed (read or written) through any other pointer.
     /// 4. The pointer must point to an object instance that can be cast and dereferenced to an
     ///    instance of `T`.
-    /// 5. If the object instance does not have a retain that must be balanced, it will be
-    ///    over-released, which may result in undefined behavior.
+    ///
+    /// If the object instance does not have a retain that must be balanced, it will be
+    /// over-released, which may result in undefined behavior.
     ///
     /// [`Arc<T>`]: crate::sync::Arc
     #[inline]
@@ -88,12 +91,8 @@ where
     }
 }
 
-// SAFETY: `Box` is [`Send`] if `T` is [`Send`] because the instance of `T` is unaliased. Apple's
-// reference counting implementations are thread-safe, so `T` is the sole determining factor in
-// whether it's safe to transfer ownership to another thread.
+// SAFETY: `Box` is [`Send`] if `T` is [`Send`] because the instance of `T` is unaliased.
 unsafe impl<T> Send for Box<T> where T: ForeignFunctionInterface + Send {}
 
-// SAFETY: `Box` is [`Sync`] if `T` is [`Sync`] because the instance of `T` is unaliased. Apple's
-// reference counting implementations are thread-safe, so `T` is the sole determining factor in
-// whether it's safe to use allow parallel reference counting operations across threads.
+// SAFETY: `Box` is [`Sync`] if `T` is [`Sync`] because the instance of `T` is unaliased.
 unsafe impl<T> Sync for Box<T> where T: ForeignFunctionInterface + Sync {}
