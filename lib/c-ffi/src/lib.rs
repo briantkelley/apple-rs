@@ -1,6 +1,7 @@
-//! Convenience utilities for implementing *-sys crates and Rust bindings.
+//! Convenience utilities for implementing \*-sys crates and Rust bindings.
 
-/// Defines a type to represent an opaque C struct for use in defining an FFI.
+/// Defines an opaque type compatible with opaque C struct types for use in defining foreign types
+/// in Rust.
 ///
 /// By default, the type is `!Send` and `!Sync`, but these traits may be implemented if supported by
 /// the foreign type.
