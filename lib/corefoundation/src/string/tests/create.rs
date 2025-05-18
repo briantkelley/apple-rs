@@ -5,7 +5,7 @@ use super::{
     POLAR_BEAR_UTF32_NE, POLAR_BEAR_UTF32_NE_BOM, POLAR_BEAR_UTF8,
 };
 use crate::cfstr;
-use crate::string::{CharacterSet, FromUtfByteOrder, String};
+use crate::string::{Encoding, FromUtfByteOrder, String};
 use core::slice;
 
 #[test]
@@ -13,14 +13,14 @@ fn from_bytes() {
     const BYTES: [u8; 7] = [0xc0, 0xd2, 0xa6, 0xd3, 0xb7, 0xee, 0xf4];
 
     assert_eq!(
-        String::from_bytes(BYTES, CharacterSet::MacRoman).unwrap(),
+        String::from_bytes(BYTES, Encoding::MacRoman).unwrap(),
         cfstr!("¿“¶”∑ÓÙ")
     );
 }
 
 #[test]
 fn from_invalid_bytes() {
-    let _ = String::from_bytes([0x81, 0x81], CharacterSet::TraditionalChinese).unwrap_err();
+    let _ = String::from_bytes([0x81, 0x81], Encoding::AnsiTraditionalChinese).unwrap_err();
 }
 
 #[test]

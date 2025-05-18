@@ -20,15 +20,15 @@ use corefoundation_sys::{
     CFStringIsSurrogateHighCharacter, CFStringIsSurrogateLowCharacter, __CFString,
 };
 
-mod character_set;
 #[doc(hidden)]
 pub mod constant;
+mod encoding;
 #[allow(clippy::module_name_repetitions)]
 mod reader;
 #[cfg(test)]
 mod tests;
 
-pub use character_set::CharacterSet;
+pub use encoding::Encoding;
 pub use reader::{
     GetBytesLossyReader, GetBytesReader, GetBytesReaderResult, GetBytesReaderSummary,
     GetBytesStrReader, GetBytesStrReplacement,
@@ -126,10 +126,10 @@ pub enum GetBytesByteOrder {
 /// The character encoding to use when fetching code units from a [`String`] into a byte `buf`fer.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GetBytesEncoding {
-    /// An encoding that is a subset of the Unicode Transformation Format.
-    CharacterSet {
-        /// The character set encoding scheme into which to convert the [`String`].
-        character_set: CharacterSet,
+    /// A non-Unicode character set and encoding.
+    Encoding {
+        /// The character set and encoding to convert characters of [`String`] into.
+        encoding: Encoding,
 
         /// A character (for example, `b'?'`) that should be substituted for characters that cannot
         /// be converted to the specified `encoding`. Pass [`None`] if you do not want lossy
@@ -264,18 +264,17 @@ unsafe impl Send for String {}
 unsafe impl Sync for String {}
 
 impl String {
-    /// Returns a [`String`] object initialized by copying the code points encoded using
-    /// `character_set` from the byte slice.
+    /// Converts a buffer containing characters in the specified `encoding` into a `String`.
     ///
     /// # Errors
     ///
-    /// Returns a [`FromBytesError`] if `bytes` contains an invalid sequence for `character_set`.
+    /// Returns a [`FromBytesError`] if `bytes` contains an invalid sequence for `encoding`.
     #[inline]
     pub fn from_bytes(
         bytes: impl AsRef<[u8]>,
-        character_set: CharacterSet,
+        encoding: Encoding,
     ) -> Result<Arc<Self>, FromBytesError> {
-        Self::from_bytes_inner(bytes.as_ref(), character_set.into(), false)
+        Self::from_bytes_inner(bytes.as_ref(), encoding.into(), false)
     }
 
     fn from_bytes_inner(
@@ -919,7 +918,7 @@ impl GetBytesEncoding {
     /// Returns `true` if conversion should prepend a byte order mark (BOM).
     const fn is_external_representation(self) -> bool {
         match self {
-            Self::CharacterSet { .. } | Self::Utf8 => false,
+            Self::Encoding { .. } | Self::Utf8 => false,
             Self::Utf16 { byte_order } | Self::Utf32 { byte_order, .. } => {
                 byte_order.is_external_representation()
             }
@@ -930,15 +929,11 @@ impl GetBytesEncoding {
     /// (i.e., all surrogate pairs are in tact).
     const fn is_infallible(self) -> bool {
         match self {
-            Self::CharacterSet {
-                character_set,
+            Self::Encoding {
+                encoding,
                 loss_byte,
             } => {
-                // LINT: <CharacterSet as Into<CFStringEncoding>>::into cannot be used in a const
-                // context.
-                #[allow(clippy::as_conversions)]
-                let is_lossless =
-                    character_set as CFStringEncoding == kCFStringEncodingNonLossyASCII;
+                let is_lossless = encoding.into_raw() == kCFStringEncodingNonLossyASCII;
                 loss_byte.is_some() || is_lossless
             }
             Self::Utf8 | Self::Utf16 { .. } | Self::Utf32 { .. } => true,
@@ -949,7 +944,7 @@ impl GetBytesEncoding {
     /// encoding.
     const fn loss_byte(self) -> Option<NonZeroU8> {
         match self {
-            Self::CharacterSet { loss_byte, .. } | Self::Utf32 { loss_byte, .. } => loss_byte,
+            Self::Encoding { loss_byte, .. } | Self::Utf32 { loss_byte, .. } => loss_byte,
             Self::Utf8 | Self::Utf16 { .. } => None,
         }
     }
@@ -959,7 +954,7 @@ impl From<GetBytesEncoding> for CFStringEncoding {
     #[inline]
     fn from(value: GetBytesEncoding) -> Self {
         match value {
-            GetBytesEncoding::CharacterSet { character_set, .. } => character_set.into(),
+            GetBytesEncoding::Encoding { encoding, .. } => encoding.into(),
             GetBytesEncoding::Utf8 => kCFStringEncodingUTF8,
             GetBytesEncoding::Utf16 { byte_order } => match byte_order {
                 GetBytesByteOrder::BigEndian => kCFStringEncodingUTF16BE,

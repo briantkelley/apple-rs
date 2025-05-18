@@ -5,7 +5,7 @@ use super::{
 };
 use crate::cfstr;
 use crate::string::{
-    CharacterSet, FromUtfByteOrder, GetBytesByteOrder, GetBytesEncoding, GetBytesError,
+    Encoding, FromUtfByteOrder, GetBytesByteOrder, GetBytesEncoding, GetBytesError,
     GetBytesErrorKind, GetBytesResult, GetBytesSurrogateError, String,
 };
 use core::num::NonZeroU8;
@@ -228,8 +228,8 @@ fn get_bytes_buf_too_small() {
 
 #[test]
 fn get_bytes_cannot_convert_lossless_buf_none() {
-    let mac_roman = GetBytesEncoding::CharacterSet {
-        character_set: CharacterSet::MacRoman,
+    let mac_roman = GetBytesEncoding::Encoding {
+        encoding: Encoding::MacRoman,
         loss_byte: None,
     };
 
@@ -315,8 +315,8 @@ fn get_bytes_cannot_convert_lossless_buf_none() {
 #[test]
 fn get_bytes_cannot_convert_lossless_buf() {
     let mut buf = [0_u8; 16];
-    let mac_roman = GetBytesEncoding::CharacterSet {
-        character_set: CharacterSet::MacRoman,
+    let mac_roman = GetBytesEncoding::Encoding {
+        encoding: Encoding::MacRoman,
         loss_byte: None,
     };
 
@@ -413,8 +413,8 @@ fn get_bytes_cannot_convert_lossy_buf_none() {
     assert_eq!(
         POLAR_BEAR_WITH_ASCII.get_bytes(
             ..,
-            GetBytesEncoding::CharacterSet {
-                character_set: CharacterSet::MacRoman,
+            GetBytesEncoding::Encoding {
+                encoding: Encoding::MacRoman,
                 loss_byte: NonZeroU8::new(0xf0),
             },
             None
@@ -433,8 +433,8 @@ fn get_bytes_cannot_convert_lossy_buf() {
     let GetBytesResult { buf_len, remaining } = POLAR_BEAR_WITH_ASCII
         .get_bytes(
             ..,
-            GetBytesEncoding::CharacterSet {
-                character_set: CharacterSet::MacRoman,
+            GetBytesEncoding::Encoding {
+                encoding: Encoding::MacRoman,
                 loss_byte: NonZeroU8::new(0xf0),
             },
             Some(&mut buf),
