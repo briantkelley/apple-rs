@@ -6,17 +6,23 @@ on:
   push:
     branches: [ 'main' ]
 
+env:
+  # When changing, also update the string literal in `jobs.apple-darwin-check.name`.
+  MSRV: '1.80'
+
 jobs:
   apple-darwin-check:
-    name: ${{ format('Check {0}-[aarch64, x86_64]-apple-darwin', matrix.toolchain) }}
+    name: Check ${{ matrix.toolchain == 'msrv' && '1.80' || matrix.toolchain }}-[aarch64, x86_64]-apple-darwin
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: rustup self update
-      - name: ${{ format('rustup install {0}', matrix.toolchain) }}
+      - name: rustup install ${{ env.toolchain }}
+        env:
+          toolchain: ${{ matrix.toolchain == 'msrv' && env.MSRV || matrix.toolchain }}
         run: |
-          rustup install ${{ matrix.toolchain }} && \
-          rustup default ${{ matrix.toolchain }}
+          rustup install ${{ env.toolchain }} && \
+          rustup default ${{ env.toolchain }}
       - run: |
           rustup target add aarch64-apple-darwin && \
           rustup target add x86_64-apple-darwin
@@ -28,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [ '1.80', 'stable' ]
+        toolchain: [ 'msrv', 'stable' ]
 
   apple-darwin-test:
     name: Test stable-x86_64-apple-darwin
@@ -46,7 +52,7 @@ jobs:
       - run: cargo fetch
       - run: cargo test
 
-  dispatch_once_inline_fastpath:
+  apple-darwin-test-no-dispatch_once_inline_fastpath:
     name: Test dispatch without dispatch_once_inline_fastpath feature
     runs-on: macos-latest
     steps:
@@ -69,7 +75,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup self update
-      - run: rustup install stable
+      - name: rustup install ${{ env.MSRV }}
+        run: |
+          rustup install ${{ env.MSRV }} && \
+          rustup default ${{ env.MSRV }} && \
+          rustup component add clippy
       - run: |
           rustup target add aarch64-apple-darwin && \
           rustup target add x86_64-apple-darwin
