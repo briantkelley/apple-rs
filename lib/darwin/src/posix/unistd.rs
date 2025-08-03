@@ -1,9 +1,7 @@
 //! Miscellaneous standard symbolic constants, functions, and types.
 
 #[cfg(feature = "experimental")]
-use crate::_sys::posix::unistd::{
-    self, confstr, mkdtemp, mkstemp, rmdir, _CS_DARWIN_USER_TEMP_DIR,
-};
+use crate::_sys::posix::unistd::{self, mkdtemp, mkstemp, rmdir, _CS_DARWIN_USER_TEMP_DIR};
 #[cfg(feature = "experimental")]
 use crate::c::errno::{self, check, Error};
 #[cfg(feature = "experimental")]
@@ -36,21 +34,26 @@ impl ConfigurationString {
     ///    * `None`: The variable name is valid but does not have a defined value.
     /// * `Err(_)`: The call was not successful and failed due to the provided reason.
     pub fn get(self, buf: Option<&mut [u8]>) -> Result<Option<NonZeroUsize>, NonZeroI32> {
-        let (ptr, len) = buf.map_or((ptr::null_mut(), 0), |buf| (buf.as_mut_ptr(), buf.len()));
+        confstr(self as _, buf)
+    }
+}
 
-        // Clear the current error code. This must occur prior to calling the C function to
-        // disambiguate an error from "not defined".
-        errno::set(None);
+#[cfg(feature = "experimental")]
+fn confstr(name: i32, buf: Option<&mut [u8]>) -> Result<Option<NonZeroUsize>, NonZeroI32> {
+    let (ptr, len) = buf.map_or((ptr::null_mut(), 0), |buf| (buf.as_mut_ptr(), buf.len()));
 
-        // SAFETY: buf is a mutable slice, thus its range is guaranteed to be a valid write
-        // destination. The system function handles null pointers, never overruns the buffer, and
-        // always nul terminates the output.
-        match NonZeroUsize::new(unsafe { confstr(self as _, ptr.cast(), len) }) {
-            // confstr(3) returned 0. There was either an error or there is no entry.
-            None => errno::get().map(Err).transpose(),
-            // A non-zero result is always the capacity required for the full nul terminated string.
-            cap => Ok(cap),
-        }
+    // Clear the current error code. This must occur prior to calling the C function to
+    // disambiguate an error from "not defined".
+    errno::set(None);
+
+    // SAFETY: buf is a mutable slice, thus its range is guaranteed to be a valid write
+    // destination. The system function handles null pointers, never overruns the buffer, and
+    // always nul terminates the output.
+    match NonZeroUsize::new(unsafe { unistd::confstr(name, ptr.cast(), len) }) {
+        // confstr(3) returned 0. There was either an error or there is no entry.
+        None => errno::get().map(Err).transpose(),
+        // A non-zero result is always the capacity required for the full nul terminated string.
+        cap => Ok(cap),
     }
 }
 
@@ -162,8 +165,8 @@ pub fn unlink(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
 #[cfg(test)]
 mod tests {
     use super::{
-        create_unique_directory_and_open, create_unique_file_and_open, remove_directory, unlink,
-        ConfigurationString,
+        confstr, create_unique_directory_and_open, create_unique_file_and_open, remove_directory,
+        unlink, ConfigurationString,
     };
     use crate::c::errno::Error;
     use crate::sys::stat::Metadata;
@@ -194,9 +197,8 @@ mod tests {
 
     #[test]
     fn bad_name() {
-        let name: ConfigurationString = unsafe { mem::transmute(0) };
         assert_eq!(
-            name.get(None).unwrap_err().get(),
+            confstr(0, None).unwrap_err().get(),
             Error::InvalidArgument as _
         );
     }
