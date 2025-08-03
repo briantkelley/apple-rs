@@ -8,22 +8,20 @@ use std::process::ExitCode;
 fn main() -> ExitCode {
     println!("cargo:rerun-if-changed=build.rs");
 
-    if input_env_var("CARGO_FEATURE_DISPATCH_ONCE_INLINE_FASTPATH").is_some() {
-        eprintln!("Do not manually enable the dispatch_once_inline_fastpath feature.");
-        eprintln!("This feature is automatically enabled if supported by the target.");
-        return ExitCode::FAILURE;
-    }
-
-    if !is_truthy(input_env_var("NO_DISPATCH_ONCE_INLINE_FASTPATH")) {
+    let inline_fastpath = if is_truthy(input_env_var("NO_DISPATCH_ONCE_INLINE_FASTPATH")) {
+        false
+    } else {
         let target_arch_is_x86_or_x86_64 = input_env_var("CARGO_CFG_TARGET_ARCH")
             .is_some_and(|arch| arch == "x86_64" || arch == "x86");
         let target_vendor_is_apple =
             input_env_var("CARGO_CFG_TARGET_VENDOR").is_some_and(|vendor| vendor == "apple");
 
-        if target_arch_is_x86_or_x86_64 || target_vendor_is_apple {
-            println!("cargo:rustc-cfg=feature=\"dispatch_once_inline_fastpath\"");
-        }
-    }
+        target_arch_is_x86_or_x86_64 || target_vendor_is_apple
+    };
+    let inline_fatpath_value = if inline_fastpath { "1" } else { "0" };
+
+    println!("cargo:rustc-check-cfg=cfg(dispatch_once_inline_fastpath, values(\"0\", \"1\"))");
+    println!("cargo:rustc-cfg=dispatch_once_inline_fastpath=\"{inline_fatpath_value}\"");
 
     ExitCode::SUCCESS
 }

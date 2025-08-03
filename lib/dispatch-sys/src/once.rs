@@ -8,8 +8,7 @@ mod slowpath {
     use super::{c_void, dispatch_function_t, dispatch_once_t};
 
     extern "C" {
-        // LINT: It's easier to keep this pub than to configure via the feature.
-        #[allow(unreachable_pub)]
+        #[cfg_attr(dispatch_once_inline_fastpath = "1", allow(unreachable_pub))]
         pub fn dispatch_once_f(
             predicate: *mut dispatch_once_t,
             context: *mut c_void,
@@ -19,7 +18,7 @@ mod slowpath {
 }
 
 #[allow(clippy::missing_safety_doc)] // same as [`slowpath::dispatch_once_f`]
-#[cfg(feature = "dispatch_once_inline_fastpath")]
+#[cfg(dispatch_once_inline_fastpath = "1")]
 #[inline(always)]
 pub unsafe fn dispatch_once_f(
     predicate: *mut dispatch_once_t,
@@ -34,5 +33,5 @@ pub unsafe fn dispatch_once_f(
     }
 }
 
-#[cfg(not(feature = "dispatch_once_inline_fastpath"))]
+#[cfg(not(dispatch_once_inline_fastpath = "1"))]
 pub use slowpath::dispatch_once_f;

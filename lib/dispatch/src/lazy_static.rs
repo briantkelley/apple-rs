@@ -31,7 +31,7 @@ use core::ops::Deref;
 pub struct LazyStatic<T> {
     sentinel: Once,
     payload: UnsafeCell<Payload<T>>,
-    #[cfg(not(feature = "dispatch_once_inline_fastpath"))]
+    #[cfg(not(dispatch_once_inline_fastpath = "1"))]
     initialized: core::sync::atomic::AtomicBool,
 }
 
@@ -50,7 +50,7 @@ impl<T> LazyStatic<T> {
             payload: UnsafeCell::new(Payload {
                 initialize: MaybeUninit::new(initialize),
             }),
-            #[cfg(not(feature = "dispatch_once_inline_fastpath"))]
+            #[cfg(not(dispatch_once_inline_fastpath = "1"))]
             initialized: core::sync::atomic::AtomicBool::new(false),
         }
     }
@@ -75,18 +75,18 @@ impl<T> LazyStatic<T> {
         let value = initialize();
         payload.value = ManuallyDrop::new(MaybeUninit::new(value));
 
-        #[cfg(not(feature = "dispatch_once_inline_fastpath"))]
+        #[cfg(not(dispatch_once_inline_fastpath = "1"))]
         self.initialized
             .store(true, core::sync::atomic::Ordering::Release);
     }
 
-    #[cfg(feature = "dispatch_once_inline_fastpath")]
+    #[cfg(dispatch_once_inline_fastpath = "1")]
     unsafe fn pending(&mut self) -> bool {
         // SAFETY: Caller asserts proper use of this function.
         unsafe { self.sentinel.pending() }
     }
 
-    #[cfg(not(feature = "dispatch_once_inline_fastpath"))]
+    #[cfg(not(dispatch_once_inline_fastpath = "1"))]
     unsafe fn pending(&mut self) -> bool {
         !self.initialized.load(core::sync::atomic::Ordering::Acquire)
     }
@@ -98,15 +98,14 @@ where
 {
     #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        #[cfg(feature = "dispatch_once_inline_fastpath")]
+        #[cfg(dispatch_once_inline_fastpath = "1")]
         // SAFETY: This is actually unsafe as it may race with initialization on another thread.
         // But, in the worst case, it'll print an incorrect value of the initialize function
         // pointer, but otherwise there is no undefined behavior that may affect the runtime of the
         // process.
         let pending = unsafe { self.sentinel.pending_unsafe() };
 
-        #[cfg(not(feature = "dispatch_once_inline_fastpath"))]
-        // SAFETY: See above SAFETY comment.
+        #[cfg(not(dispatch_once_inline_fastpath = "1"))]
         let pending = !self.initialized.load(core::sync::atomic::Ordering::Acquire);
 
         let (name, value): (&str, &dyn Debug) = if pending {

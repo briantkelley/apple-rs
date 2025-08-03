@@ -114,7 +114,7 @@ impl Once {
     /// elide future calls to [`Self::dispatch_once`] or [`Self::dispatch_once_with_context`]. The
     /// dispatch once function **must** always be called before accessing any resources effected by
     /// the callback function.
-    #[cfg(feature = "dispatch_once_inline_fastpath")]
+    #[cfg(dispatch_once_inline_fastpath = "1")]
     #[inline]
     pub unsafe fn pending(&mut self) -> bool {
         // Although the [`dispatch_once_f`] wrapper does not perform an atomic read of `predicate`,
@@ -131,7 +131,7 @@ impl Once {
     /// # Safety
     ///
     /// This function cannot be used safely because it can race with other threads.
-    #[cfg(feature = "dispatch_once_inline_fastpath")]
+    #[cfg(dispatch_once_inline_fastpath = "1")]
     pub(crate) unsafe fn pending_unsafe(&self) -> bool {
         self.0.load(core::sync::atomic::Ordering::Acquire) == 0
     }

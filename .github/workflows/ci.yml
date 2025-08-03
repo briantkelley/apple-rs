@@ -53,7 +53,7 @@ jobs:
       - run: cargo test
 
   apple-darwin-test-no-dispatch_once_inline_fastpath:
-    name: Test dispatch without dispatch_once_inline_fastpath feature
+    name: Test dispatch with dispatch_once_inline_fastpath Disabled
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
