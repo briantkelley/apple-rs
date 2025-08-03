@@ -64,12 +64,12 @@ impl Metadata {
 
     #[must_use]
     pub fn len(&self) -> u64 {
-        self.stat.size.try_into().unwrap_or_default()
+        self.stat.st_size.try_into().unwrap_or_default()
     }
 
     #[must_use]
     pub const fn mode(&self) -> Mode {
-        Mode(self.stat.mode)
+        Mode(self.stat.st_mode)
     }
 }
 

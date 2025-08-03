@@ -69,7 +69,6 @@ used_underscore_items = "allow"
 [workspace.lints.rust]
 deprecated_in_future = "warn"
 keyword_idents = { level = "warn", priority = -1 }
-keyword_idents_2024 = "allow"
 let_underscore_drop = "warn"
 macro_use_extern_crate = "warn"
 meta_variable_misuse = "warn"
