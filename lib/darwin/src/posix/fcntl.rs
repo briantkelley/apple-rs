@@ -98,7 +98,7 @@ mod tests {
         let path = CStr::from_bytes_with_nul(b"/dev/random\0").unwrap();
         let result = Open::new(AccessMode::ReadOnly).path(path);
 
-        assert!(matches!(result, Ok(_)));
+        assert!(result.is_ok());
         drop(result);
     }
 
@@ -107,7 +107,7 @@ mod tests {
         let path = CStr::from_bytes_with_nul(b"/dev/null\0").unwrap();
         let result = Open::new(AccessMode::WriteOnly).path(path);
 
-        assert!(matches!(result, Ok(_)));
+        assert!(result.is_ok());
         drop(result);
     }
 }

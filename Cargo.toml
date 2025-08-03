@@ -51,7 +51,6 @@ pattern_type_mismatch = "warn"
 pedantic = { level = "warn", priority = -1 }
 pub_underscore_fields = "allow"
 pub_without_shorthand = "warn"
-redundant_pattern_matching = "allow"
 redundant_pub_crate = "allow"
 semicolon_outside_block = "warn"
 single_char_lifetime_names = "warn"
