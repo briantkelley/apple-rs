@@ -42,7 +42,7 @@ manual_c_str_literals = "allow"
 missing_assert_message = "allow"
 missing_errors_doc = "allow"
 missing_inline_in_public_items = "allow"
-mod_module_files = "allow"
+mod_module_files = "deny"
 multiple_inherent_impl = "warn"
 nursery = { level = "warn", priority = -1 }
 obfuscated_if_else = "warn"
