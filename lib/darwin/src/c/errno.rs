@@ -83,7 +83,7 @@ pub fn get() -> Option<NonZeroI32> {
 
 /// Set the last error number visible to the current thread.
 pub fn set(errno: Option<NonZeroI32>) {
-    let errno = errno.map_or(0, NonZeroI32::get);
+    let errno = errno.map_or(0_i32, NonZeroI32::get);
     // SAFETY: __error() is guaranteed to return a thread-specific non-null pointer.
     unsafe { *__error() = errno };
 }

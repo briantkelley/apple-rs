@@ -81,7 +81,7 @@ mod tests {
         let o = Open::default;
 
         assert_eq!(o().close_on_exec(true).oflag, O_CLOEXEC);
-        assert_eq!(o().close_on_exec(true).close_on_exec(false).oflag, 0);
+        assert_eq!(o().close_on_exec(true).close_on_exec(false).oflag, 0_i32);
     }
 
     #[test]

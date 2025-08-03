@@ -78,9 +78,9 @@ pub fn create_unique_directory_and_open(template: &mut [u8]) -> Result<OwnedFd, 
         // verifies the buffer is nul-terminated. The system function will only overwrite bytes
         // preceding the nul terminator.
         if unsafe { mkdtemp(template) }.is_null() {
-            -1
+            -1_i32
         } else {
-            0
+            0_i32
         }
     })?;
 
