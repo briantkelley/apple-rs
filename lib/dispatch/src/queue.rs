@@ -39,7 +39,7 @@ impl Queue {
         F: FnOnce() + Send + 'static,
     {
         let queue: *const _ = self;
-        let queue = (queue as *mut Self).cast();
+        let queue = queue.cast_mut().cast();
         let context = Box::into_raw(Box::new(f)).cast();
         // SAFETY: The reference is guaranteed to be a valid pointer, the context is guaranteed to
         // be a valid pointer, and Self::call_boxed_fn_once::<F> has the correct signature.
