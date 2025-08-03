@@ -66,7 +66,6 @@ mod tests {
     use super::{AccessMode, Open};
     use crate::_sys::posix::fcntl::{O_CLOEXEC, O_RDONLY, O_RDWR, O_WRONLY};
     use crate::c::errno::Error;
-    use core::ffi::CStr;
 
     #[test]
     fn access_mode() {
@@ -87,7 +86,7 @@ mod tests {
 
     #[test]
     fn not_found() {
-        let path = CStr::from_bytes_with_nul(b"/this/path/does/not/exist\0").unwrap();
+        let path = c"/this/path/does/not/exist";
         let result = Open::new(AccessMode::ReadOnly).path(path);
 
         assert_eq!(result.unwrap_err().get(), Error::NotFound as _);
@@ -95,7 +94,7 @@ mod tests {
 
     #[test]
     fn read() {
-        let path = CStr::from_bytes_with_nul(b"/dev/random\0").unwrap();
+        let path = c"/dev/random";
         let result = Open::new(AccessMode::ReadOnly).path(path);
 
         assert!(result.is_ok());
@@ -104,7 +103,7 @@ mod tests {
 
     #[test]
     fn write() {
-        let path = CStr::from_bytes_with_nul(b"/dev/null\0").unwrap();
+        let path = c"/dev/null";
         let result = Open::new(AccessMode::WriteOnly).path(path);
 
         assert!(result.is_ok());

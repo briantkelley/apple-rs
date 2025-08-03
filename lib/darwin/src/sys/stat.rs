@@ -208,7 +208,6 @@ impl From<Permission> for Permissions {
 mod tests {
     use super::{Metadata, Permission};
     use crate::posix::fcntl::Open;
-    use core::ffi::CStr;
 
     #[test]
     fn stat_bin_sh() {
@@ -217,7 +216,7 @@ mod tests {
             UserRead, UserWrite,
         };
 
-        let path = CStr::from_bytes_with_nul(b"/bin/sh\0").unwrap();
+        let path = c"/bin/sh";
         let fd = Open::default().path(path).unwrap();
 
         let metadata = Metadata::from_fd(&fd).unwrap();

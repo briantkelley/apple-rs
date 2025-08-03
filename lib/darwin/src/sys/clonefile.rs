@@ -67,10 +67,7 @@ mod tests {
 
     #[test]
     fn test_clone_fd() {
-        let source_path = CStr::from_bytes_with_nul(
-            b"/System/Volumes/Data/Applications/Safari.app/Contents/Info.plist\0",
-        )
-        .unwrap();
+        let source_path = c"/System/Volumes/Data/Applications/Safari.app/Contents/Info.plist";
         let source = Open::default().path(source_path).unwrap();
 
         let mut buf: [u8; 512] = unsafe { mem::zeroed() };
@@ -87,7 +84,7 @@ mod tests {
 
         let destination_directory =
             create_unique_directory_and_open(&mut buf[..=template_end]).unwrap();
-        let destination_file_name = CStr::from_bytes_with_nul(b"Info.plist\0").unwrap();
+        let destination_file_name = c"Info.plist";
 
         Clone::default()
             .fd(&source, &destination_directory, destination_file_name)
