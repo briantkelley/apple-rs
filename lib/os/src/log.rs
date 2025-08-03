@@ -238,14 +238,10 @@ impl Log {
 
     fn with_parameters(parameters: Parameters) -> Option<Builder<()>> {
         // SAFETY: This matches the canonical mechanics of `<os/log.h>`.
-        if unsafe { os_log_type_enabled(parameters.log, parameters.ty) } {
-            Some(Builder {
-                parameters,
-                buffer: AlignedBuffer::new(),
-            })
-        } else {
-            None
-        }
+        unsafe { os_log_type_enabled(parameters.log, parameters.ty) }.then_some(Builder {
+            parameters,
+            buffer: AlignedBuffer::new(),
+        })
     }
 }
 
