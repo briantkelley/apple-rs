@@ -86,5 +86,7 @@ jobs:
       - run: cargo fetch
       - run: cargo clippy --target aarch64-apple-darwin --all-targets -- --deny warnings
       - run: cargo clippy --target aarch64-apple-darwin --all-targets --no-default-features -- --deny warnings
+      - run: cargo clippy --target aarch64-apple-darwin --all-targets --all-features -- --deny warnings
       - run: cargo clippy --target x86_64-apple-darwin --all-targets -- --deny warnings
       - run: cargo clippy --target x86_64-apple-darwin --all-targets --no-default-features -- --deny warnings
+      - run: cargo clippy --target x86_64-apple-darwin --all-targets --all-features -- --deny warnings
