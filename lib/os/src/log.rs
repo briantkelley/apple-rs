@@ -108,7 +108,7 @@ impl<T> Builder<T> {
             parameters: self.parameters,
             buffer: AlignedBuffer(Buffer {
                 summary: self.buffer.0.summary | item.summary_flags(),
-                items_len: self.buffer.0.items_len + 1,
+                items_len: self.buffer.0.items_len.checked_add(1).unwrap(),
                 items: Items(self.buffer.0.items, item),
             }),
         }

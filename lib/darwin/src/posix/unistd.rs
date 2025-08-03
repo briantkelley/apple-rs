@@ -121,16 +121,22 @@ fn create_unique_retry_driver(
     mut mktemp: impl FnMut(*mut c_char) -> i32,
 ) -> Result<i32, NonZeroI32> {
     let mut iter = template.iter().rev();
-    assert!(*iter.next().unwrap() == 0);
+    (iter.next().copied().ok_or(Error::NotFound)? == 0)
+        .then_some(())
+        .ok_or(Error::IllegalByteSequence)?;
 
-    let template_len = template.len() - 1 /* nul */;
-    let placeholder_range = (template_len - iter.position(|c| *c != b'X').unwrap())..template_len;
+    let template_len = iter.clone().len();
+    let placeholder_range = iter
+        .position(|c| *c != b'X')
+        .map(|pos| template_len.wrapping_sub(pos)..template_len);
 
     loop {
         match check(mktemp(template.as_mut_ptr().cast())) {
             Err(e) if e.get() == Error::Interrupted as _ => {
                 // template is in an undefined state. Restore the placeholders and retry.
-                template[placeholder_range.clone()].fill(b'X');
+                if let Some(range) = placeholder_range.as_ref() {
+                    template[range.clone()].fill(b'X');
+                }
             }
             result => return result,
         }
@@ -164,6 +170,8 @@ pub fn unlink(path: impl AsRef<CStr>) -> Result<(), NonZeroI32> {
 #[cfg(feature = "experimental")]
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::arithmetic_side_effects)]
+
     use super::{
         confstr, create_unique_directory_and_open, create_unique_file_and_open, remove_directory,
         unlink, ConfigurationString,

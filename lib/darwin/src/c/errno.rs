@@ -35,6 +35,13 @@ pub enum Error {
     NotSupported = errno::EOPNOTSUPP,
 }
 
+impl From<Error> for NonZeroI32 {
+    fn from(error: Error) -> Self {
+        // SAFETY: `Error` does not have a zero discriminant.
+        unsafe { Self::new_unchecked(error as _) }
+    }
+}
+
 impl TryFrom<NonZeroI32> for Error {
     type Error = NonZeroI32;
 
